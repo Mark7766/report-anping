@@ -30,10 +30,11 @@ htmlcov/
 params.json
 
 # Generated chapter Markdown (Hermes output, not source)
-chapters/
+# Use /chapters/ (anchored to root) so tests/fixtures/chapters/ is NOT ignored
+/chapters/
 
 # Exported Word reports
-exports/
+/exports/
 
 # ── Logs ──────────────────────────────────────────────────────
 logs/
