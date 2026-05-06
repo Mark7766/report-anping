@@ -1,0 +1,50 @@
+# ai-coding-ok: v3.0.0
+# {{project-name}} — project metadata
+# Machine-readable project metadata for CI/CD, agents, and tooling.
+
+project:
+  name: "report-anping"
+  description: "Hermes Skill — WeChat 对话驱动的地震安全性评价报告生成服务"
+  version: "0.1.0"
+  stage: "development"  # development / staging / production
+  created: "2026-05-05"
+  user_scale: "个人/小型团队 (1–10 人)"
+  design_principle: "极简主义 — 零运维部署，个人工具首选 SQLite + FastAPI"
+
+tech_stack:
+  language: "Python"
+  language_version: "3.11"
+  backend_framework: "N/A (no server; Skill is SKILL.md + scripts)"
+  frontend: "N/A (WeChat via Hermes)"
+  orm: "N/A"
+  database: "N/A (Hermes manages conversation context)"
+  database_driver: "N/A"
+  test_framework: "pytest"
+  config: "N/A (no env vars needed for skill itself)"
+  package_manager: "pip"
+
+code_quality:
+  formatter: "ruff"
+  linter: "ruff"
+  type_checker: "mypy"
+  test_framework: "pytest"
+  min_coverage: 80
+
+commands:
+  install: "pip install -r requirements.txt"
+  dev: "N/A (no server to start)"
+  test: "pytest tests/"
+  test_coverage: "pytest --cov=scripts --cov-report=xml"
+  lint: "ruff check scripts tests"
+  format: "ruff format scripts tests"
+
+structure:
+  source_dir: "src"
+  test_dir: "tests"
+  docs_dir: "docs"
+  scripts_dir: "scripts"
+
+conventions:
+  commit_format: "conventional-commits"
+  branch_strategy: "github-flow"
+  code_review: "recommended"

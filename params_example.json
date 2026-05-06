@@ -1,0 +1,18 @@
+{
+  "name": "某核电站工程地震安全性评价",
+  "level": "II",
+  "engineering_type": "核电站",
+  "location": "广东省深圳市",
+  "coordinate_lon": "114.06",
+  "coordinate_lat": "22.54",
+  "building_height": 80,
+  "construction_unit": "某能源集团有限公司",
+  "survey_unit": "某地质勘察院",
+  "evaluation_unit": "某地震安全性评价机构",
+  "exceedance_probs": {
+    "50_year": [63, 10, 5, 2],
+    "100_year": [10, 5, 2, 1]
+  },
+  "report_date": "2025-06",
+  "extra_notes": ""
+}

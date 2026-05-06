@@ -1,0 +1,14 @@
+line-length = 120
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W", "I"]
+# E402: module-level import not at top of file.
+# All scripts and lib modules use sys.path.insert() or place a module
+# docstring after `from __future__ import annotations`, which triggers
+# E402 for subsequent stdlib imports. This is an intentional pattern.
+ignore = ["E402"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
