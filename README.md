@@ -86,11 +86,11 @@ pytest tests/ -v
 
 ### 方式一：微信一句话安装（推荐）
 
-在微信中向 Hermes 发送以下消息（替换 `YOUR_GITHUB_USERNAME`）：
+在微信中向 Hermes 发送以下消息：
 
 ```
 帮我安装地震安评技能，执行以下两条命令：
-1. cd ~/.hermes/skills/domain && git clone https://github.com/YOUR_GITHUB_USERNAME/report-anping.git
+1. cd ~/.hermes/skills/domain && git clone https://github.com/Mark7766/report-anping.git
 2. $(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown -q
 ```
 
@@ -103,7 +103,7 @@ Hermes 执行完毕后，**重启 Hermes session**，之后直接说「我要生
 ```bash
 # Step 1 — 克隆到 Hermes skill 目录
 cd ~/.hermes/skills/domain
-git clone https://github.com/YOUR_GITHUB_USERNAME/report-anping.git
+git clone https://github.com/Mark7766/report-anping.git
 
 # Step 2 — 安装 Python 依赖到 Hermes 的 Python 环境
 # （Hermes 使用自己 venv 内的 Python，需明确安装）
