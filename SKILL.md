@@ -86,7 +86,7 @@ $(head -1 $(which hermes) | sed 's|#!||') -c "import docx, markdown, matplotlib"
 如果命令成功（无报错），继续 Step 1。若失败，告知用户运行：
 `pip install python-docx markdown matplotlib`（使用 Hermes 同版本的 Python）。
 
-### Step 0 — 初始化项目工作区
+ ### Step 0 — 初始化项目工作区
 
 在开始新项目前，先创建工作区目录结构和 `params.json` 模板：
 
