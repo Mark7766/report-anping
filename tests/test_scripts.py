@@ -597,3 +597,81 @@ class TestChapterPromptsAdditional:
         result = build_report_prompt(params)
         assert isinstance(result, str)
         assert len(result) > 50
+
+
+class TestGb17741KnowledgeExtra:
+    """Additional coverage for lib/gb17741_knowledge.py helper functions."""
+
+    def test_get_clause_two_part_id(self) -> None:
+        from lib.gb17741_knowledge import get_clause
+
+        # Two-part clause ID: should return the section dict
+        result = get_clause("5.2")
+        # May be None if data not loaded, but must not raise
+        assert result is None or isinstance(result, dict)
+
+    def test_get_clause_three_part_id(self) -> None:
+        from lib.gb17741_knowledge import get_clause
+
+        result = get_clause("5.2.1")
+        assert result is None or isinstance(result, (dict, str))
+
+    def test_get_clause_short_id_returns_none(self) -> None:
+        from lib.gb17741_knowledge import get_clause
+
+        assert get_clause("5") is None
+
+    def test_get_appendix_b_returns_dict(self) -> None:
+        from lib.gb17741_knowledge import get_appendix_b
+
+        result = get_appendix_b()
+        assert isinstance(result, dict)
+
+    def test_full_guidance_with_formula_chapter(self) -> None:
+        """chapter9 has a formula map entry — exercises lines 1025-1030."""
+        from lib.gb17741_knowledge import get_full_standard_guidance_for_ai
+
+        result = get_full_standard_guidance_for_ai(chapter_id="chapter9")
+        assert isinstance(result, str)
+        assert len(result) > 50
+
+
+class TestGenerateFiguresExtra:
+    """Additional coverage for scripts/generate_figures.py coord-fallback path."""
+
+    def _load_params(self) -> dict:
+        import json
+        from pathlib import Path
+
+        return json.loads((Path(__file__).parent.parent / "params_example.json").read_text())
+
+    def test_coord_fallback_when_invalid_values(self, tmp_path) -> None:
+        """coords set to non-numeric trigger the except branch (lines 82-83)."""
+        from scripts.generate_figures import generate_figures_manifest
+
+        catalog = Path(__file__).parent / "fixtures" / "ceic_catalog_sample.csv"
+        params = self._load_params()
+        # Inject invalid coordinate values to trigger TypeError/ValueError fallback
+        params["coordinate_lon"] = "not-a-number"
+        params["coordinate_lat"] = None
+        out = tmp_path / "figs"
+        manifest = generate_figures_manifest(params, out_dir=out, catalog_path=catalog)
+        assert "epicenter_map" in manifest
+
+    def test_auto_detect_catalog_when_default_exists(self, tmp_path, monkeypatch) -> None:
+        """When catalog_path is None and _DEFAULT_CATALOG exists, it is used (line 57)."""
+        import shutil
+
+        import scripts.generate_figures as gf
+
+        catalog_src = Path(__file__).parent / "fixtures" / "ceic_catalog_sample.csv"
+        fake_default = tmp_path / "ceic_catalog.csv"
+        shutil.copy(catalog_src, fake_default)
+
+        monkeypatch.setattr(gf, "_DEFAULT_CATALOG", fake_default)
+
+        params = self._load_params()
+        out = tmp_path / "figs_auto"
+        manifest = gf.generate_figures_manifest(params, out_dir=out, catalog_path=None)
+        # With a valid catalog auto-detected, mt_chart should be in manifest
+        assert "mt_chart" in manifest
