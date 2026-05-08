@@ -21,6 +21,33 @@
 
 ## Task Records
 
+### [TASK-016] 代码质量审查与修复 — 补充 future annotations 及缺失 docstring
+- **Date**: 2026-05-09
+- **Type**: style
+- **Summary**: 全面审查 lib/ + scripts/ + tests/ 代码质量：ruff lint/format 均通过；发现 5 个 lib 文件缺少 `from __future__ import annotations`（AGENTS.md 强制要求），3 个 `__init__` 方法缺少 docstring；逐一修复，161 条测试全绿，无其他问题。
+- **Changed files**:
+  - `lib/compliance.py`、`lib/docx_builder.py`、`lib/figure_renderer.py`、`lib/gb17741_knowledge.py`、`lib/table_renderer.py`（添加 future annotations + `__init__` docstring）
+- **Notes**: 仍有多个函数超 50 行（chart_builder/compliance/docx_builder 中），属已有代码，不在本次范围内。type annotations 在 lib/ 各文件中仍不完整，属历史遗留，后续可按文件逐步补充。
+
+### [TASK-015] 为纯 Python 渲染器辅助类新增 60 条单元测试，覆盖率 77%→79%
+- **Date**: 2025-05-09
+- **Type**: test
+- **Summary**: 新建 `tests/test_renderers.py`（53 条）覆盖 `MarkdownTableParser`、`TableNumbering`（`lib/table_renderer.py`）、`FigureNumbering`、`ChapterNumberingTracker`（`lib/figure_renderer.py`）所有纯 Python 方法及无效章节号保护路径；在 `tests/test_scripts.py` 新增 8 条测试覆盖 `get_clause`、`get_appendix_b`、`get_full_standard_guidance_for_ai`（formula 分支）以及 `generate_figures_manifest` 的坐标回退（TypeError/ValueError 路径）和 `_DEFAULT_CATALOG` 自动检测路径；测试总数 101→161，全绿，覆盖率 77%→79%。
+- **Changed files**:
+  - `tests/test_renderers.py`（新建：53 条）
+  - `tests/test_scripts.py`（修改：新增 TestGb17741KnowledgeExtra + TestGenerateFiguresExtra 共 8 条）
+
+### [TASK-014] 新增 init_project.py、填补测试覆盖、修正 project-memory.md 状态
+- **Date**: 2026-05-09
+- **Type**: feat + test + chore
+- **Summary**: 新增工作区初始化脚本 `scripts/init_project.py`（创建 4 个标准子目录 + params.json 模板，幂等，支持 --force）；新增 24 条测试（TestInitProject/TestBuildMtChartCLI/TestCompliancePrompts/TestChapterPromptsAdditional），测试总数 77→101，全绿；覆盖率 71%→77%（compliance_prompts 0%→96%，chapter_prompts 68%→98%，gb17741 61%→79%）；修正 project-memory.md 中所有 ⬜ planned 状态、补充 init_project 入架构图；SKILL.md 新增 Step 0（init_project）。
+- **Changed files**:
+  - `scripts/init_project.py`（新建：工作区初始化脚本）
+  - `tests/test_scripts.py`（修改：新增 24 条测试）
+  - `SKILL.md`（修改：新增 Step 0 说明 init_project.py）
+  - `.github/agent/memory/project-memory.md`（修改：状态表全部改为 ✅ implemented，架构图补 init_project）
+- **Notes**: CLI main() 经 subprocess 调用的脚本（build_mt_chart.py、build_chapter_prompt.py）在 pytest-cov 下仍显示 0%/35%，属正常现象（subprocess 独立进程不计入父进程覆盖率）。
+
 ### [TASK-013] 图件扩展：震中分布图、震源深度图、烈度影响图；CEIC 目录自动检测
 - **Date**: 2026-05-08
 - **Type**: feat + test
