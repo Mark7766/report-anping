@@ -21,6 +21,23 @@
 
 ## Task Records
 
+### [TASK-012] 专业化增强：图件生成与 CEIC 目录 M-T 能力
+- **Date**: 2026-05-08
+- **Type**: feat + docs + test
+- **Summary**: 基于旧国标安评报告样式完成技能增强：新增数据驱动图件生成能力（反应谱、PGA 对比）与 CEIC 目录驱动 M-T 图生成能力；升级章节 prompt 的专业表达与图件嵌入规范；改进 render_docx 正文段落格式（两端对齐、1.5 倍行距、首行缩进）；补充 SKILL/README 工作流与命令说明；新增集成测试，测试总数 72 全绿。
+- **Changed files**:
+  - `lib/chart_builder.py`（新建：目录解析、M-T 图、反应谱图、PGA 对比图）
+  - `scripts/generate_figures.py`（新建：一键生成图件清单）
+  - `scripts/build_mt_chart.py`（新建：CEIC 目录导出生成 M-T 图）
+  - `scripts/render_docx.py`（修改：正文段落格式专业化）
+  - `lib/prompts/chapter_prompts.py`（修改：增强专业写作与图片引用要求）
+  - `requirements.txt`（修改：新增 `matplotlib>=3.8`）
+  - `tests/fixtures/ceic_catalog_sample.csv`（新建）
+  - `tests/test_scripts.py`（修改：新增图件脚本测试）
+  - `SKILL.md`（修改：新增图件生成步骤与 CEIC M-T 工作流）
+  - `README.md`（修改：新增图件能力说明与命令示例）
+- **Notes**: 当前 CEIC 站点抓取受页面结构/反爬影响，脚本采用“先导出目录 CSV/JSON 再生成图件”的稳态方案；后续若 CEIC 提供稳定 API，可再加在线拉取模式。
+
 ### [TASK-011] Phase 4.5 — Hermes Skill 实装验证
 - **Date**: 2026-05-06
 - **Type**: fix + docs

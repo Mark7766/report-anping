@@ -156,6 +156,10 @@ class MarkdownToDocxRenderer:
             stripped = line.strip()
             if stripped:
                 para = self.doc.add_paragraph(stripped)
+                para.alignment = 3  # justify
+                para.paragraph_format.line_spacing = 1.5
+                para.paragraph_format.first_line_indent = Pt(24)
+                para.paragraph_format.space_after = Pt(6)
                 body_font = self.fmt.get("body_font", "宋体")
                 body_size = self.fmt.get("body_size", 12)
                 for run in para.runs:

@@ -125,7 +125,18 @@ def build_chapter_prompt(project_data, chapter, chapter_index, total_chapters):
 3. 技术参数必须符合{STANDARD_INFO["code"]}正文各章节的规定
 4. 内容要专业、客观、符合工程技术规范
 5. 可使用合理的示例数据进行说明
-6. 直接输出章节内容
+6. 图表必须与文字结论一一对应，并在段内明确引用（如“见图2-3、表2-1”）
+7. 直接输出章节内容
+
+【专业表达与格式增强】
+1. 优先使用“先结论后论证”的写法，每小节第一段先给综合判断
+2. 关键数据尽量结构化表达：范围、均值、极值、主控因素
+3. 章节末尾增加“### 本节小结”，用 2-4 条条目总结
+4. 对于图件相关内容，使用规范图题风格（图X-Y 名称）
+5. 若可引用生成图件，请使用 Markdown 图片语法，例如：
+    - ![图 2-1 区域地震 M-T 图](assets/generated/mt_chart.png)
+    - ![图 6-1 设计反应谱对比图](assets/generated/response_spectrum.png)
+    - ![图 6-2 不同超越概率 PGA 对比图](assets/generated/pga_comparison.png)
 
 【排版规范——必须严格遵守】
 1. 每个自然段控制在 300～500 字以内，段与段之间用空行分隔

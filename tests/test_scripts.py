@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 FIXTURES_CHAPTERS = REPO_ROOT / "tests" / "fixtures" / "chapters"
+FIXTURES_CEIC_CATALOG = REPO_ROOT / "tests" / "fixtures" / "ceic_catalog_sample.csv"
 PARAMS_EXAMPLE = REPO_ROOT / "params_example.json"
 
 
@@ -237,3 +238,99 @@ class TestCheckCompliance:
         empty.mkdir()
         results = check_chapters(empty, "II")
         assert results == []
+
+
+# ============================================================
+# generate_figures / build_mt_chart
+# ============================================================
+
+
+class TestFigureScripts:
+    """Tests for figure generation scripts."""
+
+    def test_generate_figures_manifest_outputs_pngs(self, tmp_path: Path) -> None:
+        from scripts.generate_figures import generate_figures_manifest
+
+        params = json.loads(PARAMS_EXAMPLE.read_text(encoding="utf-8"))
+        out_dir = tmp_path / "figures"
+        manifest = generate_figures_manifest(
+            params=params,
+            out_dir=out_dir,
+            catalog_path=FIXTURES_CEIC_CATALOG,
+            min_magnitude=4.7,
+        )
+
+        assert "response_spectrum" in manifest
+        assert "pga_comparison" in manifest
+        assert "mt_chart" in manifest
+
+        for key in ("response_spectrum", "pga_comparison", "mt_chart"):
+            p = Path(manifest[key])
+            assert p.exists()
+            assert p.suffix.lower() == ".png"
+            assert p.stat().st_size > 0
+
+    def test_catalog_loader_parses_fixture(self) -> None:
+        from lib.chart_builder import load_catalog_records
+
+        records = load_catalog_records(FIXTURES_CEIC_CATALOG)
+        assert len(records) == 5
+        assert float(records[0]["magnitude"]) > 0
+        # depth field is now parsed
+        assert "depth" in records[0]
+        assert float(records[0]["depth"]) > 0
+
+    def test_generate_epicenter_map(self, tmp_path: Path) -> None:
+        from lib.chart_builder import generate_epicenter_map, load_catalog_records
+
+        records = load_catalog_records(FIXTURES_CEIC_CATALOG)
+        out = tmp_path / "epicenter_map.png"
+        result = generate_epicenter_map(records, out, center_lon=120.3, center_lat=34.2, site_name="TestSite")
+        assert result.exists()
+        assert result.stat().st_size > 0
+
+    def test_generate_focal_depth_distribution(self, tmp_path: Path) -> None:
+        from lib.chart_builder import generate_focal_depth_distribution, load_catalog_records
+
+        records = load_catalog_records(FIXTURES_CEIC_CATALOG)
+        out = tmp_path / "focal_depth.png"
+        result = generate_focal_depth_distribution(records, out)
+        assert result.exists()
+        assert result.stat().st_size > 0
+
+    def test_generate_intensity_bar_chart(self, tmp_path: Path) -> None:
+        from lib.chart_builder import generate_intensity_bar_chart
+
+        influences = [
+            {"year": 1918, "location": "南澳", "magnitude": 7.25, "intensity": "VI"},
+            {"year": 1969, "location": "阳江", "magnitude": 6.4, "intensity": "V"},
+            {"year": 1994, "location": "台湾海峡", "magnitude": 7.3, "intensity": "IV"},
+        ]
+        out = tmp_path / "intensity_bar.png"
+        result = generate_intensity_bar_chart(influences, out, site_name="TestSite")
+        assert result.exists()
+        assert result.stat().st_size > 0
+
+    def test_generate_intensity_bar_chart_empty(self, tmp_path: Path) -> None:
+        from lib.chart_builder import generate_intensity_bar_chart
+
+        out = tmp_path / "intensity_bar_empty.png"
+        result = generate_intensity_bar_chart([], out)
+        assert result.exists()
+
+    def test_generate_figures_manifest_includes_catalog_charts(self, tmp_path: Path) -> None:
+        from scripts.generate_figures import generate_figures_manifest
+
+        params = json.loads(PARAMS_EXAMPLE.read_text(encoding="utf-8"))
+        out_dir = tmp_path / "figures_full"
+        manifest = generate_figures_manifest(
+            params=params,
+            out_dir=out_dir,
+            catalog_path=FIXTURES_CEIC_CATALOG,
+        )
+
+        for key in ("epicenter_map", "focal_depth_distribution", "intensity_bar_chart"):
+            assert key in manifest, f"Expected '{key}' in manifest"
+            p = Path(manifest[key])
+            assert p.exists()
+            assert p.stat().st_size > 0

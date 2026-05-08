@@ -36,6 +36,9 @@ params.json
 # Exported Word reports
 /exports/
 
+# CEIC earthquake catalog (downloaded user data, never commit)
+/data/ceic_catalog.csv
+
 # ── Logs ──────────────────────────────────────────────────────
 logs/
 *.log

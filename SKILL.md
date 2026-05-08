@@ -27,8 +27,9 @@ metadata:
 
 1. **参数收集**：通过微信多轮对话，依次向用户询问 13 个必要项目参数（项目名称、工作等级、工程类别、场地位置等），写入 `params.json`。
 2. **章节生成**：对每一章调用 `build_chapter_prompt.py` 获取定制 prompt，Hermes 用自己的 LLM 生成 Markdown，保存至 `chapters/NN_chapterX.md`。
-3. **文档渲染**：调用 `render_docx.py` 将全部章节 Markdown 渲染为格式规范的 Word 文档（`exports/report.docx`）。
-4. **合规检查**：调用 `check_compliance.py` 对照 GB 17741-2025 逐章检查，输出评分与不符合项。
+3. **图件生成**：调用 `generate_figures.py` 基于 `params.json` 生成反应谱图、PGA 对比图；若 `data/ceic_catalog.csv` 存在（CEIC 导出文件）则**自动**追加生成 M-T 图、震中分布图、震源深度分布图；若 `params.json` 含 `historical_influences` 字段则生成烈度影响条形图。
+4. **文档渲染**：调用 `render_docx.py` 将全部章节 Markdown 渲染为格式规范的 Word 文档（`exports/report.docx`）。
+5. **合规检查**：调用 `check_compliance.py` 对照 GB 17741-2025 逐章检查，输出评分与不符合项。
 
 脚本本身**不调用任何 LLM**；所有 LLM 调用均由 Hermes 自主完成。脚本只负责：查询标准知识库、拼接 prompt 模板、纯确定性渲染。
 
@@ -78,12 +79,12 @@ metadata:
 在调用任何脚本前，先检查依赖是否已安装：
 
 ```bash
-$(head -1 $(which hermes) | sed 's|#!||') -c "import docx, markdown" 2>/dev/null \
-  || $(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown -q
+$(head -1 $(which hermes) | sed 's|#!||') -c "import docx, markdown, matplotlib" 2>/dev/null \
+  || $(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown matplotlib -q
 ```
 
 如果命令成功（无报错），继续 Step 1。若失败，告知用户运行：
-`pip install python-docx markdown`（使用 Hermes 同版本的 Python）。
+`pip install python-docx markdown matplotlib`（使用 Hermes 同版本的 Python）。
 
 ### Step 0 — 查询参数清单与章节结构
 
@@ -136,7 +137,44 @@ python scripts/build_chapter_prompt.py --chapter preface --params params.json
 
 对全部章节（preface → chapter1 → chapter2 → … → appendix）重复此步骤。
 
-### Step 3 — 渲染 Word 文档
+### Step 3 — 生成图件（推荐）
+
+```bash
+# 基于 params 生成反应谱图 + PGA 对比图
+# 若 data/ceic_catalog.csv 存在，自动追加震目录相关图件（M-T 图、震中分布图、震源深度图）
+python scripts/generate_figures.py --params params.json --out-dir assets/generated
+
+# 显式指定震目录路径（覆盖自动检测）
+python scripts/generate_figures.py --params params.json --out-dir assets/generated \
+  --catalog data/ceic_catalog.csv
+
+# 单独生成 M-T 图（兼容旧流程）
+python scripts/build_mt_chart.py --catalog data/ceic_catalog.csv --out assets/generated/mt_chart.png --min-mag 4.7
+```
+
+**自动检测规则**：若项目根目录 `data/ceic_catalog.csv` 存在（从中国地震台网 www.ceic.ac.cn 导出的 CSV），
+`generate_figures.py` 会自动生成以下五类图件，无需额外参数：
+- `response_spectrum.png` — 设计反应谱对比图
+- `pga_comparison.png` — 不同超越概率 PGA 对比图
+- `mt_chart.png` — 区域地震 M-T 时序图
+- `epicenter_map.png` — 震中空间分布图（含工程场地标记与 150/300 km 参考圆）
+- `focal_depth_distribution.png` — 震源深度分布直方图
+
+若 `params.json` 含 `historical_influences` 字段，还将生成：
+- `intensity_bar_chart.png` — 历史地震烈度影响条形图
+
+在章节 Markdown 中按需插入图片引用（示例）：
+
+```markdown
+![图 2-1 震中空间分布图](assets/generated/epicenter_map.png)
+![图 2-2 区域地震 M-T 图](assets/generated/mt_chart.png)
+![图 2-3 震源深度分布图](assets/generated/focal_depth_distribution.png)
+![图 2-4 历史地震烈度影响图](assets/generated/intensity_bar_chart.png)
+![图 6-1 设计反应谱对比图](assets/generated/response_spectrum.png)
+![图 6-2 不同超越概率 PGA 对比图](assets/generated/pga_comparison.png)
+```
+
+### Step 4 — 渲染 Word 文档
 
 ```bash
 python scripts/render_docx.py \
@@ -147,7 +185,7 @@ python scripts/render_docx.py \
 
 脚本将 `chapters/*.md` 按标准顺序合并，插入封面、目录，渲染表格与图片，输出 `exports/report.docx`。
 
-### Step 4 — GB 17741-2025 合规检查
+### Step 5 — GB 17741-2025 合规检查
 
 ```bash
 python scripts/check_compliance.py \
@@ -159,7 +197,7 @@ python scripts/check_compliance.py \
 
 人类可读报告（默认）；JSON 格式：`--format json`。
 
-### Step 5 — 告知用户
+### Step 6 — 告知用户
 
 检查通过后，将 `exports/report.docx` 的**绝对路径**发送给用户，并简要说明：
 - 报告总章节数

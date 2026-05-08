@@ -11,6 +11,7 @@
 |------|------|
 | 参数收集 | 多轮对话依次询问 13 个必要参数，保存为 `params.json` |
 | 章节生成 | 为每章输出定制 prompt，Hermes LLM 生成符合国标的 Markdown 正文 |
+| 图件生成 | 基于参数自动生成反应谱图、PGA 对比图；支持基于 CEIC 地震目录生成 M-T 图 |
 | 文档渲染 | Markdown + 参数 → 格式规范的 `.docx`（含封面、目录、表格、图片）|
 | 合规检查 | 逐章对照 GB 17741-2025 评分，输出不符合项与改进建议 |
 
@@ -43,7 +44,17 @@ python scripts/build_chapter_prompt.py --params params_example.json --list-chapt
 python scripts/build_chapter_prompt.py --chapter chapter4 --params params_example.json
 ```
 
-### 4. 渲染 Word 文档
+### 4. 生成图件（推荐）
+
+```bash
+# 参数驱动图件（反应谱、PGA 对比）
+python scripts/generate_figures.py --params params_example.json --out-dir assets/generated
+
+# CEIC 目录驱动 M-T 图（需先从 CEIC 导出目录 CSV/JSON）
+python scripts/build_mt_chart.py --catalog tests/fixtures/ceic_catalog_sample.csv --out assets/generated/mt_chart.png
+```
+
+### 5. 渲染 Word 文档
 
 ```bash
 python scripts/render_docx.py \
@@ -52,7 +63,7 @@ python scripts/render_docx.py \
   --out /tmp/demo.docx
 ```
 
-### 5. 合规检查
+### 6. 合规检查
 
 ```bash
 python scripts/check_compliance.py \
@@ -91,7 +102,7 @@ pytest tests/ -v
 ```
 帮我安装地震安评技能，执行以下两条命令：
 1. cd ~/.hermes/skills/domain && git clone https://github.com/Mark7766/report-anping.git
-2. $(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown -q
+2. $(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown matplotlib -q
 ```
 
 Hermes 执行完毕后，**重启 Hermes session**，之后直接说「我要生成地震安评报告」即可触发本技能。
@@ -107,7 +118,7 @@ git clone https://github.com/Mark7766/report-anping.git
 
 # Step 2 — 安装 Python 依赖到 Hermes 的 Python 环境
 # （Hermes 使用自己 venv 内的 Python，需明确安装）
-$(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown -q
+$(head -1 $(which hermes) | sed 's|#!||') -m pip install python-docx markdown matplotlib -q
 
 # Step 3 — 验证安装
 hermes skills list | grep report-anping
@@ -121,7 +132,8 @@ hermes skills list | grep report-anping
 ```bash
 cd ~/.hermes/skills/domain/report-anping
 git pull
-# 无需重新安装依赖（requirements.txt 只含 python-docx 和 markdown）
+# 常规情况下无需重复安装依赖；若 requirements.txt 有更新，执行：
+# $(head -1 $(which hermes) | sed 's|#!||') -m pip install -r requirements.txt
 ```
 
 ---
@@ -153,6 +165,8 @@ report-anping/
 ├── scripts/
 │   ├── show_params.py          输出 13 个参数清单 + 章节结构
 │   ├── build_chapter_prompt.py 输出某章节的生成 prompt（不调 LLM）
+│   ├── generate_figures.py      基于 params 生成图件（反应谱、PGA 对比）
+│   ├── build_mt_chart.py        基于 CEIC 目录生成 M-T 图
 │   ├── render_docx.py          渲染 chapters/*.md → .docx
 │   └── check_compliance.py     GB 17741-2025 合规检查
 ├── lib/                        本仓库自维护领域库
@@ -169,7 +183,7 @@ report-anping/
 ├── tests/                      单元 + 集成测试（70 条）
 │   └── fixtures/chapters/      3 个示例章节 .md 文件
 ├── params_example.json         13 字段参数示例
-├── requirements.txt            python-docx>=1.1.0, markdown>=3.5
+├── requirements.txt            python-docx>=1.1.0, markdown>=3.5, matplotlib>=3.8
 └── ruff.toml                   Lint 配置（行宽 120，忽略 E402）
 ```
 
@@ -193,6 +207,9 @@ Hermes Agent（用自己的 LLM 完成所有对话与章节生成）
   │   Hermes 用自己的 LLM 生成 Markdown → chapters/NN.md
   │   对全部章节循环
   │
+  ├─► python scripts/generate_figures.py --params params.json --out-dir assets/generated
+  │       → 生成图件（反应谱、PGA 对比、可选 M-T）
+  │
   ├─► python scripts/render_docx.py --params params.json --chapters chapters/ --out exports/report.docx
   │       → 纯确定性渲染
   │
@@ -204,7 +221,7 @@ Hermes Agent（用自己的 LLM 完成所有对话与章节生成）
 
 ## 约束与限制
 
-- **Python 3.11+**；依赖极少（`python-docx`、`markdown`）
+- **Python 3.11+**；依赖极少（`python-docx`、`markdown`、`matplotlib`）
 - **脚本不调 LLM**；所有 LLM 调用由 Hermes 自主完成
 - **无数据库**；状态通过 `params.json` + `chapters/*.md` 文件交换
 - **无密钥**；若需签名 URL 等凭证，通过环境变量注入

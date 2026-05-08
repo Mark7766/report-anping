@@ -238,3 +238,39 @@ Copy the template below to record a new decision:
 > - `lib/logger.py` 去除 `from flask import g, has_request_context, request` 相关代码
 > - `lib/gb17741_knowledge.py` 中 `_DATA_DIR` 改为指向 `lib/data/standards/`
 > - 开发时**不需要** ajepro 仓库存在于本地
+
+---
+
+### ADR-007: 图件能力实现策略 — 确定性图件引擎 + CEIC 导出目录输入
+
+- **Date**: 2026-05-08
+- **Status**: ✅ Adopted
+- **Decision maker**: 功能增强阶段 (AI Agent)
+
+#### Context
+> 用户要求增强报告专业性，新增“基于数据自动生成图件”与“基于 CEIC 地震目录生成 M-T 图”能力。CEIC 页面在线抓取存在动态渲染/反爬不稳定因素，直接在线解析风险高。
+
+#### Options
+
+| Option | Pros | Cons |
+|------|------|------|
+| 在线抓取 CEIC 页面并实时解析 | 自动化程度高 | 稳定性差、易受前端改版影响、测试不可重复 |
+| 读取 CEIC 导出的 CSV/JSON（当前选择） | 稳定、可测试、可离线复现 | 需要用户先导出目录文件 |
+| 手工维护地震目录文本 | 最简单 | 不可规模化、易出错 |
+
+#### Decision
+> 采用“**确定性图件引擎 + CEIC 导出目录输入**”方案：
+> - 在 `lib/chart_builder.py` 实现通用图件生成（M-T、反应谱、PGA 对比）
+> - 提供 `scripts/generate_figures.py` 与 `scripts/build_mt_chart.py` 作为 CLI 入口
+> - 在章节 prompt 中规范 Markdown 图片引用路径，由 `render_docx.py` 统一落版
+
+#### Rationale
+> 1. 保持 Skill 一贯的 deterministic 架构，不引入在线依赖脆弱点。
+> 2. 测试可重复（fixture 目录可稳定覆盖）。
+> 3. 用户真实业务流程通常已包含目录导出/整理环节，CSV/JSON 输入契合现状。
+
+#### Impact
+> - 新增依赖 `matplotlib>=3.8`
+> - 新增图件脚本 `scripts/generate_figures.py`、`scripts/build_mt_chart.py`
+> - SKILL.md/README Workflow 增加图件步骤
+> - 报告可在 chapter markdown 中插入自动生成图件并渲染入 .docx

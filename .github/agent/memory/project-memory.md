@@ -36,6 +36,8 @@ Hermes Agent（用自己的 LLM 完成全部对话与生成）
     ├ bash: build_chapter_prompt.py --chapter N --params params.json
     │         → stdout 输出该章 prompt【不调 LLM】
     ├ Hermes 用自己的 LLM 生成 markdown → chapters/NN.md（逐章循环）
+    ├ bash: generate_figures.py --params params.json --out-dir assets/generated
+    │         → 生成反应谱图 / PGA 对比图（可选追加 M-T 图）
     ├ bash: render_docx.py --params … --chapters chapters/ --out exports/report.docx
     └ bash: check_compliance.py --report exports/report.docx
 ```
@@ -53,6 +55,7 @@ Hermes Agent（用自己的 LLM 完成全部对话与生成）
 WeChat user → Hermes 读 SKILL.md
   → bash: show_params.py → 多轮对话收集 → params.json
   → 逐章循环：bash: build_chapter_prompt.py → Hermes LLM 生成 → chapters/NN.md
+  → bash: generate_figures.py（可选：build_mt_chart.py）→ assets/generated/*.png
   → bash: render_docx.py → exports/<project>.docx
   → bash: check_compliance.py → 合规报告
   → Hermes 告知用户路径
@@ -86,6 +89,9 @@ WeChat user → Hermes 读 SKILL.md
 | `scripts/build_chapter_prompt.py` | 读 params + 调用 lib/prompts 拼出某章 prompt | ⬜ planned |
 | `scripts/render_docx.py` | 调用 lib/docx_builder、table_renderer、figure_renderer 渲染 .docx | ⬜ planned |
 | `scripts/check_compliance.py` | 调用 lib/compliance 规则引擎 | ⬜ planned |
+| `scripts/generate_figures.py` | 基于参数生成反应谱图、PGA 对比图 | ✅ implemented |
+| `scripts/build_mt_chart.py` | 基于 CEIC 导出目录（CSV/JSON）生成 M-T 图 | ✅ implemented |
+| `lib/chart_builder.py` | 图件引擎（目录解析 + 图件渲染） | ✅ implemented |
 | `lib/logger.py` | 纯 stdlib 日志，去 Flask 化 | ⬜ planned |
 | `lib/gb17741_knowledge.py` | GB 17741-2025 国标知识库 | ⬜ planned |
 | `lib/docx_builder.py` | Word 文档构建器 | ⬜ planned |
@@ -110,6 +116,7 @@ WeChat user → Hermes 读 SKILL.md
 8. **lib/ Python import 能工作的原因**：Hermes 运行 `python scripts/xxx.py` 时 cwd 是技能根，`from lib.xxx import` 天然可用
 9. **脚本间交换**：只走 `params.json`（参数）+ `chapters/NN.md`（Hermes LLM 产出）
 10. **安装路径**：`~/.hermes/skills/domain/report-anping/`（`cp -r . ~/.hermes/skills/domain/report-anping/`）
+11. **图件输入约束**：CEIC 目录优先使用导出 CSV/JSON，避免在线抓取不稳定性
 
 ---
 
@@ -130,4 +137,8 @@ WeChat user → Hermes 读 SKILL.md
 pip install -r requirements.txt
 python scripts/show_params.py
 # 完整流程由 Hermes 驱动；Shell 下仅可手动验证各脚本输入输出
+
+# 图件能力验证
+python scripts/generate_figures.py --params params_example.json --out-dir assets/generated
+python scripts/build_mt_chart.py --catalog tests/fixtures/ceic_catalog_sample.csv --out assets/generated/mt_chart.png
 ```

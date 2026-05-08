@@ -14,5 +14,11 @@
     "100_year": [10, 5, 2, 1]
   },
   "report_date": "2025-06",
-  "extra_notes": ""
+  "extra_notes": "",
+  "historical_influences": [
+    {"year": 1918, "location": "南澳", "magnitude": 7.25, "intensity": "VI"},
+    {"year": 1969, "location": "阳江", "magnitude": 6.4, "intensity": "V"},
+    {"year": 1994, "location": "台湾海峡", "magnitude": 7.3, "intensity": "IV"},
+    {"year": 2012, "location": "惠州", "magnitude": 4.8, "intensity": "III"}
+  ]
 }
