@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 ajepro backend - Word文档构建器工具
 封装python-docx底层XML操作，处理目录、页眉页脚等高级功能

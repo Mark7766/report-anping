@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 ajepro backend - 图片渲染引擎
 处理图片的专业化渲染，包括自动编号、图题、多图并排等
@@ -24,7 +26,8 @@ logger = get_logger("figure_renderer")
 class FigureNumbering:
     """图片编号追踪器"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """初始化图片编号追踪器，章节号默认为 0，计数器从 0 开始。"""
         self.chapter = 0
         self.figure_count = 0
         self.figure_registry = {}  # id -> number mapping
@@ -78,9 +81,10 @@ class FigureNumbering:
 class ChapterNumberingTracker:
     """章节编号追踪器 - 用于追踪当前处于哪个章节"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """初始化章节号追踪器，当前章节默认为 0（未确定）。"""
         self.current_chapter = 0
-        self.chapter_pattern = re.compile(r"^(?:第\s*(\d+)\s*章|(\d+)[\.\s])")
+        self.chapter_pattern = re.compile(r"^(?:第\s*(\d+)\s*章|(\d+)[\.\ ])")
         # 🔑 特殊章节标识符映射
         self.special_chapters = {
             "前言": "前",

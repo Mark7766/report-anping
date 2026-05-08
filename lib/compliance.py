@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 ajepro backend - 服务层 - 合规检查服务
 基于 GB 17741-2025 国标的合规检查逻辑

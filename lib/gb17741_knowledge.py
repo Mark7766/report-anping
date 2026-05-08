@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 GB 17741-2025 国标知识库
 工程场地地震安全性评价标准知识库

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 ajepro backend - 专业表格渲染引擎
 将Markdown表格转换为专业的Word表格（三线表/全框表样式）
@@ -431,7 +433,8 @@ class DocxTableRenderer:
 class TableNumbering:
     """表格编号追踪器"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """初始化表格编号追踪器，章节号默认为 0，计数器从 0 开始。"""
         self.chapter = 0
         self.table_count = 0
         self.table_registry = {}  # id -> number mapping
