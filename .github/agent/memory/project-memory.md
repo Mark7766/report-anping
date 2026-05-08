@@ -53,9 +53,10 @@ Hermes Agent（用自己的 LLM 完成全部对话与生成）
 
 ```
 WeChat user → Hermes 读 SKILL.md
+  → bash: init_project.py --out-dir <project_dir> → 创建目录结构 + params.json 模板
   → bash: show_params.py → 多轮对话收集 → params.json
   → 逐章循环：bash: build_chapter_prompt.py → Hermes LLM 生成 → chapters/NN.md
-  → bash: generate_figures.py（可选：build_mt_chart.py）→ assets/generated/*.png
+  → bash: generate_figures.py（自动检测 data/ceic_catalog.csv；可选 --catalog 显式指定）→ assets/generated/*.png
   → bash: render_docx.py → exports/<project>.docx
   → bash: check_compliance.py → 合规报告
   → Hermes 告知用户路径
@@ -84,23 +85,25 @@ WeChat user → Hermes 读 SKILL.md
 
 | Module | Description | Status |
 |------|------|------|
-| `SKILL.md` | Hermes 总调度手册 | ⬜ planned |
-| `scripts/show_params.py` | 输出 13 参数清单 + GB 17741 章节结构 | ⬜ planned |
-| `scripts/build_chapter_prompt.py` | 读 params + 调用 lib/prompts 拼出某章 prompt | ⬜ planned |
-| `scripts/render_docx.py` | 调用 lib/docx_builder、table_renderer、figure_renderer 渲染 .docx | ⬜ planned |
-| `scripts/check_compliance.py` | 调用 lib/compliance 规则引擎 | ⬜ planned |
-| `scripts/generate_figures.py` | 基于参数生成反应谱图、PGA 对比图 | ✅ implemented |
+| `SKILL.md` | Hermes 总调度手册 | ✅ implemented |
+| `scripts/init_project.py` | 初始化新项目工作区（目录+params.json 模板） | ✅ implemented |
+| `scripts/show_params.py` | 输出 13 参数清单 + GB 17741 章节结构 | ✅ implemented |
+| `scripts/build_chapter_prompt.py` | 读 params + 调用 lib/prompts 拼出某章 prompt | ✅ implemented |
+| `scripts/render_docx.py` | 调用 lib/docx_builder、table_renderer、figure_renderer 渲染 .docx | ✅ implemented |
+| `scripts/check_compliance.py` | 调用 lib/compliance 规则引擎 | ✅ implemented |
+| `scripts/generate_figures.py` | 基于参数生成反应谱图、PGA 对比图；自动检测 data/ceic_catalog.csv 追加震目录图件 | ✅ implemented |
 | `scripts/build_mt_chart.py` | 基于 CEIC 导出目录（CSV/JSON）生成 M-T 图 | ✅ implemented |
-| `lib/chart_builder.py` | 图件引擎（目录解析 + 图件渲染） | ✅ implemented |
-| `lib/logger.py` | 纯 stdlib 日志，去 Flask 化 | ⬜ planned |
-| `lib/gb17741_knowledge.py` | GB 17741-2025 国标知识库 | ⬜ planned |
-| `lib/docx_builder.py` | Word 文档构建器 | ⬜ planned |
-| `lib/table_renderer.py` | Markdown 表格 → Word 表格 | ⬜ planned |
-| `lib/figure_renderer.py` | 图片渲染引擎 | ⬜ planned |
-| `lib/compliance.py` | GB 17741 合规规则引擎 | ⬜ planned |
-| `lib/prompts/chapter_prompts.py` | 章节 prompt 构建 | ⬜ planned |
-| `lib/data/standards/` | GB 17741-2025 JSON 标准数据（10 个文件） | ⬜ planned |
-| `params_example.json` | 13 字段参数示例 | ⬜ planned |
+| `lib/chart_builder.py` | 图件引擎（目录解析 + 6 类图件：反应谱/PGA/M-T/震中分布/震源深度/烈度影响） | ✅ implemented |
+| `lib/logger.py` | 纯 stdlib 日志，去 Flask 化 | ✅ implemented |
+| `lib/gb17741_knowledge.py` | GB 17741-2025 国标知识库 | ✅ implemented |
+| `lib/docx_builder.py` | Word 文档构建器 | ✅ implemented |
+| `lib/table_renderer.py` | Markdown 表格 → Word 表格 | ✅ implemented |
+| `lib/figure_renderer.py` | 图片渲染引擎 | ✅ implemented |
+| `lib/compliance.py` | GB 17741 合规规则引擎 | ✅ implemented |
+| `lib/prompts/chapter_prompts.py` | 章节 prompt 构建 | ✅ implemented |
+| `lib/prompts/compliance_prompts.py` | 合规检查/修复系统提示词常量 | ✅ implemented |
+| `lib/data/standards/` | GB 17741-2025 JSON 标准数据（10 个文件） | ✅ implemented |
+| `params_example.json` | 13 字段参数示例（含 historical_influences） | ✅ implemented |
 
 ---
 

@@ -21,6 +21,20 @@
 
 ## Task Records
 
+### [TASK-013] 图件扩展：震中分布图、震源深度图、烈度影响图；CEIC 目录自动检测
+- **Date**: 2026-05-08
+- **Type**: feat + test
+- **Summary**: 新增三类专业地震图件（震中空间分布图、震源深度分布图、历史地震烈度影响条形图）；`generate_figures.py` 支持自动检测 `data/ceic_catalog.csv`（无需 --catalog 参数）；目录记录增加深度字段解析；params_example.json 补充 `historical_influences` 示例；新增 5 条测试，总测试数 77 全绿；推送 commit c9eeba8。
+- **Changed files**:
+  - `lib/chart_builder.py`（修改：新增 generate_epicenter_map / generate_focal_depth_distribution / generate_intensity_bar_chart；load_catalog_records 增加 depth 字段；增加 CJK 字体自动检测配置）
+  - `scripts/generate_figures.py`（修改：自动检测 data/ceic_catalog.csv；调用新图件函数；传递坐标与历史地震参数）
+  - `tests/fixtures/ceic_catalog_sample.csv`（修改：增加 depth 列）
+  - `params_example.json`（修改：新增 historical_influences 字段示例）
+  - `.gitignore`（修改：排除 /data/ceic_catalog.csv）
+  - `SKILL.md`（修改：更新 Step 3 说明自动检测规则与全部 6 类图件）
+  - `tests/test_scripts.py`（修改：新增 5 条图件测试）
+- **Notes**: CJK 字体警告（DejaVu Sans 缺少汉字）在无 SimHei 等字体的环境下属正常现象，图片仍可正常生成，仅标签显示为方框。
+
 ### [TASK-012] 专业化增强：图件生成与 CEIC 目录 M-T 能力
 - **Date**: 2026-05-08
 - **Type**: feat + docs + test

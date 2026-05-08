@@ -86,7 +86,21 @@ $(head -1 $(which hermes) | sed 's|#!||') -c "import docx, markdown, matplotlib"
 如果命令成功（无报错），继续 Step 1。若失败，告知用户运行：
 `pip install python-docx markdown matplotlib`（使用 Hermes 同版本的 Python）。
 
-### Step 0 — 查询参数清单与章节结构
+### Step 0 — 初始化项目工作区
+
+在开始新项目前，先创建工作区目录结构和 `params.json` 模板：
+
+```bash
+python scripts/init_project.py --out-dir <project_dir>
+# 例：python scripts/init_project.py --out-dir ~/reports/my_project
+# 在当前目录初始化（适合已 cd 到目标目录的情况）：
+# python scripts/init_project.py
+```
+
+脚本自动创建 `chapters/`、`exports/`、`data/`、`assets/generated/` 四个目录，
+并写入 `params.json` 参数模板。若 `params.json` 已存在则跳过写入（传 `--force` 可强制覆盖）。
+
+### Step 0b — 查询参数清单与章节结构
 
 ```bash
 python scripts/show_params.py --level II

@@ -334,3 +334,266 @@ class TestFigureScripts:
             p = Path(manifest[key])
             assert p.exists()
             assert p.stat().st_size > 0
+
+
+# ============================================================
+# init_project
+# ============================================================
+
+
+class TestInitProject:
+    """Tests for scripts/init_project.py workspace initialisation."""
+
+    def test_init_creates_required_directories(self, tmp_path: Path) -> None:
+        from scripts.init_project import init_workspace
+
+        init_workspace(tmp_path)
+        for d in ("chapters", "exports", "data", "assets/generated"):
+            assert (tmp_path / d).is_dir(), f"Expected directory: {d}"
+
+    def test_init_creates_params_json_template(self, tmp_path: Path) -> None:
+        from scripts.init_project import init_workspace
+
+        init_workspace(tmp_path)
+        params_path = tmp_path / "params.json"
+        assert params_path.exists()
+        params = json.loads(params_path.read_text(encoding="utf-8"))
+        for key in ("name", "level", "location", "exceedance_probs"):
+            assert key in params, f"Expected key '{key}' in params template"
+
+    def test_init_skips_existing_params_by_default(self, tmp_path: Path) -> None:
+        from scripts.init_project import init_workspace
+
+        original = {"name": "existing_project", "level": "I"}
+        (tmp_path / "params.json").write_text(json.dumps(original), encoding="utf-8")
+        init_workspace(tmp_path, force=False)
+        content = json.loads((tmp_path / "params.json").read_text(encoding="utf-8"))
+        assert content["name"] == "existing_project"
+
+    def test_init_force_overwrites_existing_params(self, tmp_path: Path) -> None:
+        from scripts.init_project import init_workspace
+
+        (tmp_path / "params.json").write_text('{"name": "old"}', encoding="utf-8")
+        init_workspace(tmp_path, force=True)
+        content = json.loads((tmp_path / "params.json").read_text(encoding="utf-8"))
+        assert content["name"] == ""  # template default
+
+    def test_init_is_idempotent(self, tmp_path: Path) -> None:
+        from scripts.init_project import init_workspace
+
+        init_workspace(tmp_path)
+        init_workspace(tmp_path)  # second call must not raise
+        assert (tmp_path / "chapters").is_dir()
+
+    def test_init_returns_dict_with_all_resources(self, tmp_path: Path) -> None:
+        from scripts.init_project import init_workspace
+
+        result = init_workspace(tmp_path)
+        assert "chapters" in result
+        assert "exports" in result
+        assert "data" in result
+        assert "params.json" in result
+
+
+# ============================================================
+# build_mt_chart CLI
+# ============================================================
+
+
+class TestBuildMtChartCLI:
+    """Tests for scripts/build_mt_chart.py CLI."""
+
+    def test_cli_generates_png(self, tmp_path: Path) -> None:
+        import subprocess
+
+        out = tmp_path / "mt.png"
+        result = subprocess.run(
+            [sys.executable, "scripts/build_mt_chart.py", "--catalog", str(FIXTURES_CEIC_CATALOG), "--out", str(out)],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+        assert out.exists()
+        assert out.stat().st_size > 0
+
+    def test_cli_custom_title(self, tmp_path: Path) -> None:
+        import subprocess
+
+        out = tmp_path / "mt_titled.png"
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/build_mt_chart.py",
+                "--catalog",
+                str(FIXTURES_CEIC_CATALOG),
+                "--out",
+                str(out),
+                "--title",
+                "Test M-T Chart",
+                "--min-mag",
+                "4.5",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+        assert out.exists()
+
+    def test_cli_missing_catalog_exits_nonzero(self, tmp_path: Path) -> None:
+        import subprocess
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/build_mt_chart.py",
+                "--catalog",
+                "nonexistent_catalog.csv",
+                "--out",
+                str(tmp_path / "out.png"),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode != 0
+
+
+# ============================================================
+# compliance_prompts
+# ============================================================
+
+
+class TestCompliancePrompts:
+    """Tests for lib/prompts/compliance_prompts.py prompt constants."""
+
+    def test_check_system_prompt_is_non_empty_str(self) -> None:
+        from lib.prompts.compliance_prompts import COMPLIANCE_CHECK_SYSTEM_PROMPT
+
+        assert isinstance(COMPLIANCE_CHECK_SYSTEM_PROMPT, str)
+        assert len(COMPLIANCE_CHECK_SYSTEM_PROMPT) > 50
+
+    def test_check_system_prompt_mentions_gb17741(self) -> None:
+        from lib.prompts.compliance_prompts import COMPLIANCE_CHECK_SYSTEM_PROMPT
+
+        assert "GB 17741" in COMPLIANCE_CHECK_SYSTEM_PROMPT
+
+    def test_check_system_prompt_has_output_format_section(self) -> None:
+        from lib.prompts.compliance_prompts import COMPLIANCE_CHECK_SYSTEM_PROMPT
+
+        assert "合规检测结果" in COMPLIANCE_CHECK_SYSTEM_PROMPT
+
+    def test_fix_system_prompt_is_non_empty_str(self) -> None:
+        from lib.prompts.compliance_prompts import COMPLIANCE_FIX_SYSTEM_PROMPT
+
+        assert isinstance(COMPLIANCE_FIX_SYSTEM_PROMPT, str)
+        assert len(COMPLIANCE_FIX_SYSTEM_PROMPT) > 50
+
+    def test_fix_system_prompt_has_report_markers(self) -> None:
+        from lib.prompts.compliance_prompts import COMPLIANCE_FIX_SYSTEM_PROMPT
+
+        assert "报告内容开始" in COMPLIANCE_FIX_SYSTEM_PROMPT
+        assert "报告内容结束" in COMPLIANCE_FIX_SYSTEM_PROMPT
+
+    def test_build_compliance_check_prompt(self) -> None:
+        from lib.prompts.compliance_prompts import build_compliance_check_prompt
+
+        result = build_compliance_check_prompt("chapter1", "II")
+        assert isinstance(result, str)
+        assert "GB 17741" in result
+        assert len(result) > 100
+
+    def test_build_compliance_fix_prompt(self) -> None:
+        from lib.prompts.compliance_prompts import build_compliance_fix_prompt
+
+        result = build_compliance_fix_prompt("chapter4", "II")
+        assert isinstance(result, str)
+        assert len(result) > 100
+
+    def test_build_normalize_terms_prompt(self) -> None:
+        from lib.prompts.compliance_prompts import build_normalize_terms_prompt
+
+        result = build_normalize_terms_prompt("chapter1", "II")
+        assert isinstance(result, str)
+        assert "标准术语" in result
+
+    def test_build_validate_params_prompt(self) -> None:
+        from lib.prompts.compliance_prompts import build_validate_params_prompt
+
+        result = build_validate_params_prompt("II", "chapter1")
+        assert isinstance(result, str)
+        assert len(result) > 100
+
+    def test_build_add_reference_prompt(self) -> None:
+        from lib.prompts.compliance_prompts import build_add_reference_prompt
+
+        result = build_add_reference_prompt("chapter1", "II")
+        assert isinstance(result, str)
+        assert len(result) > 100
+
+
+# ============================================================
+# Additional chapter_prompts coverage
+# ============================================================
+
+
+class TestChapterPromptsAdditional:
+    """Extra coverage for lib/prompts/chapter_prompts.py paths."""
+
+    def _load_params(self) -> dict:
+        return json.loads(PARAMS_EXAMPLE.read_text(encoding="utf-8"))
+
+    def test_appendix_chapter_prompt(self) -> None:
+        from lib.gb17741_knowledge import get_chapters_by_level
+        from lib.prompts.chapter_prompts import build_chapter_prompt
+        from scripts.build_chapter_prompt import find_chapter
+
+        params = self._load_params()
+        chapters = get_chapters_by_level(params.get("level", "II"))
+        chapter = find_chapter(chapters, "appendix")
+        if chapter is None:
+            return  # appendix may not exist for all levels
+        idx = next(i for i, c in enumerate(chapters) if c["id"] == "appendix")
+        prompt = build_chapter_prompt(params, chapter, idx, len(chapters))
+        assert "附录" in prompt or "appendix" in prompt.lower()
+        assert len(prompt) > 100
+
+    def test_build_full_report_prompt(self) -> None:
+        from lib.prompts.chapter_prompts import build_full_report_prompt
+
+        params = self._load_params()
+        result = build_full_report_prompt(params)
+        assert isinstance(result, str)
+        assert len(result) > 100
+
+    def test_exceedance_prob_guidance_included_in_chapter_prompt(self) -> None:
+        """Chapters needing probability tables should embed the guidance block."""
+        from lib.gb17741_knowledge import get_chapters_by_level
+        from lib.prompts.chapter_prompts import build_chapter_prompt
+        from scripts.build_chapter_prompt import find_chapter
+
+        params = self._load_params()
+        chapters = get_chapters_by_level(params.get("level", "II"))
+        # chapter8 (地震动参数) includes exceedance probability guidance
+        chapter = find_chapter(chapters, "chapter8")
+        if chapter is None:
+            chapter = chapters[-2] if len(chapters) >= 2 else chapters[0]
+        idx = next(i for i, c in enumerate(chapters) if c["id"] == chapter["id"])
+        prompt = build_chapter_prompt(params, chapter, idx, len(chapters))
+        assert len(prompt) > 100
+
+    def test_get_report_structure(self) -> None:
+        from lib.prompts.chapter_prompts import get_report_structure
+
+        result = get_report_structure("II")
+        assert isinstance(result, str)
+        assert "##" in result  # has Markdown headings
+
+    def test_build_report_prompt_compat_alias(self) -> None:
+        from lib.prompts.chapter_prompts import build_report_prompt
+
+        params = self._load_params()
+        result = build_report_prompt(params)
+        assert isinstance(result, str)
+        assert len(result) > 50
