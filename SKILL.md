@@ -74,7 +74,7 @@ metadata:
 > 所有命令均在技能根目录（`~/.hermes/skills/domain/report-anping/`）下执行。
 > 中间产物：`params.json`、`chapters/NN_chapterX.md`；最终产物：`exports/report.docx`。
 
-### Step 0 — 首次运行：检查并安装依赖（仅需一次）
+### Step 0 — 首次运行：安装依赖（仅需一次）
 
 在调用任何脚本前，先检查依赖是否已安装：
 
@@ -86,7 +86,7 @@ $(head -1 $(which hermes) | sed 's|#!||') -c "import docx, markdown, matplotlib"
 如果命令成功（无报错），继续 Step 1。若失败，告知用户运行：
 `pip install python-docx markdown matplotlib`（使用 Hermes 同版本的 Python）。
 
- ### Step 0 — 初始化项目工作区
+### Step 0b — 初始化项目工作区
 
 在开始新项目前，先创建工作区目录结构和 `params.json` 模板：
 
@@ -100,7 +100,7 @@ python scripts/init_project.py --out-dir <project_dir>
 脚本自动创建 `chapters/`、`exports/`、`data/`、`assets/generated/` 四个目录，
 并写入 `params.json` 参数模板。若 `params.json` 已存在则跳过写入（传 `--force` 可强制覆盖）。
 
-### Step 0b — 查询参数清单与章节结构
+### Step 0c — 查询参数清单与章节结构
 
 ```bash
 python scripts/show_params.py --level II

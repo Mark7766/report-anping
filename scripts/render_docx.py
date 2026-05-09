@@ -94,10 +94,12 @@ class MarkdownToDocxRenderer:
         self,
         doc: Document,
         format_settings: dict | None = None,
+        base_dir: Path | None = None,
     ) -> None:
         """Initialise with a python-docx Document and optional format_settings."""
         self.doc = doc
         self.fmt = format_settings or {}
+        self.base_dir = base_dir  # project root for resolving relative image paths
         self.table_renderer = DocxTableRenderer(doc, self.fmt)
         self.table_numbering = TableNumbering()
         self.figure_numbering = FigureNumbering()
@@ -148,6 +150,10 @@ class MarkdownToDocxRenderer:
             if img_match:
                 caption = img_match.group(1).strip()
                 img_path = img_match.group(2).strip()
+                # Resolve relative paths against the project root (base_dir) so that
+                # paths like "assets/generated/xxx.png" work regardless of CWD.
+                if self.base_dir and not Path(img_path).is_absolute():
+                    img_path = str(self.base_dir / img_path)
                 self.figure_renderer.render(img_path, caption=caption)
                 idx += 1
                 continue
@@ -222,7 +228,7 @@ def render(
 
     # 渲染各章节
     fmt_settings: dict = {}
-    md_renderer = MarkdownToDocxRenderer(doc, fmt_settings)
+    md_renderer = MarkdownToDocxRenderer(doc, fmt_settings, base_dir=chapters_dir.resolve().parent)
     for md_file in md_files:
         content = md_file.read_text(encoding="utf-8")
         md_renderer.render_chapter(content)
