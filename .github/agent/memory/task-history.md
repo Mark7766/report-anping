@@ -21,6 +21,14 @@
 
 ## Task Records
 
+### [TASK-017] 修复图片未渲染进 docx 的 Bug + SKILL.md 结构问题
+- **Date**: 2026-05-09
+- **Type**: fix
+- **Summary**: 根因：`render_docx.py` 中 `MarkdownToDocxRenderer` 将章节 MD 内的相对图片路径（如 `assets/generated/xxx.png`）相对于 CWD（Hermes 技能根）解析，而实际图片在用户项目目录下，导致所有图片显示"图片未找到"；修复方法：传入 `base_dir = chapters_dir.resolve().parent`，非绝对路径先 join base_dir 再传给 figure_renderer。同时修复 SKILL.md 的重复 Step 0 标题（第二个有前置空格，被 Hermes 解析为两个独立步骤）并统一编号为 Step 0 / Step 0b / Step 0c。
+- **Changed files**:
+  - `scripts/render_docx.py`（MarkdownToDocxRenderer 增加 base_dir 参数，render() 传入 chapters_dir.resolve().parent）
+  - `SKILL.md`（Step 0 标题去重；Step 0b→Step 0b 改初始化工作区；原 Step 0b→Step 0c 查询参数清单）
+
 ### [TASK-016] 代码质量审查与修复 — 补充 future annotations 及缺失 docstring
 - **Date**: 2026-05-09
 - **Type**: style
