@@ -413,8 +413,7 @@ class DocxFigureRenderer:
         tbl = table._tbl
         tblPr = tbl.tblPr if tbl.tblPr is not None else OxmlElement("w:tblPr")
         tblBorders = OxmlElement("w:tblBorders")
-        for border_name, color in [("top", "CC0000"), ("left", "CC0000"),
-                                     ("bottom", "CC0000"), ("right", "CC0000")]:
+        for border_name, color in [("top", "CC0000"), ("left", "CC0000"), ("bottom", "CC0000"), ("right", "CC0000")]:
             border = OxmlElement(f"w:{border_name}")
             border.set(qn("w:val"), "single")
             border.set(qn("w:sz"), "8")

@@ -194,11 +194,7 @@ class TestRenderDocx:
 
         chapters = tmp_path / "chapters"
         chapters.mkdir()
-        md = (
-            "# 第1章 概述\n\n"
-            "**评价单位**：某机构\n\n"
-            "普通段落无粗体。\n"
-        )
+        md = "# 第1章 概述\n\n**评价单位**：某机构\n\n普通段落无粗体。\n"
         (chapters / "01_chapter1.md").write_text(md, encoding="utf-8")
 
         params = {"name": "Test", "level": "II", "evaluation_unit": "XXX", "report_date": "2025-01"}

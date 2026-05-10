@@ -545,12 +545,25 @@ def generate_epicenter_map_fallback(
     fig, ax = plt.subplots(figsize=(7.2, 6.4), dpi=200)
 
     # Plot site location as a red star
-    ax.plot(center_lon, center_lat, marker="*", color="red", markersize=14,
-            markeredgewidth=1.2, markeredgecolor="darkred", zorder=5)
-    ax.annotate(f"  {site_name}\n  ({center_lon:.2f}°E, {center_lat:.2f}°N)",
-                xy=(center_lon, center_lat), xytext=(8, 8),
-                textcoords="offset points", fontsize=8, color="darkred",
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor="red"))
+    ax.plot(
+        center_lon,
+        center_lat,
+        marker="*",
+        color="red",
+        markersize=14,
+        markeredgewidth=1.2,
+        markeredgecolor="darkred",
+        zorder=5,
+    )
+    ax.annotate(
+        f"  {site_name}\n  ({center_lon:.2f}°E, {center_lat:.2f}°N)",
+        xy=(center_lon, center_lat),
+        xytext=(8, 8),
+        textcoords="offset points",
+        fontsize=8,
+        color="darkred",
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor="red"),
+    )
 
     # Reference circles (approximate — small region, use flat approximation)
     # 1° lat ≈ 111.32 km; 1° lon ≈ 111.32 * cos(lat)
@@ -560,15 +573,26 @@ def generate_epicenter_map_fallback(
         theta = np.linspace(0, 2 * np.pi, 200)
         dlon = radius_km / km_per_deg_lon
         dlat = radius_km / km_per_deg_lat
-        ax.plot(center_lon + dlon * np.cos(theta),
-                center_lat + dlat * np.sin(theta),
-                color=color, linewidth=0.9, linestyle="--", alpha=0.7)
+        ax.plot(
+            center_lon + dlon * np.cos(theta),
+            center_lat + dlat * np.sin(theta),
+            color=color,
+            linewidth=0.9,
+            linestyle="--",
+            alpha=0.7,
+        )
         # Place label on the circle at ~45°
         label_lon = center_lon + dlon * np.cos(np.pi / 4)
         label_lat = center_lat + dlat * np.sin(np.pi / 4)
-        ax.annotate(label, xy=(label_lon, label_lat), fontsize=7,
-                    color=color, ha="center", va="bottom",
-                    bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.7))
+        ax.annotate(
+            label,
+            xy=(label_lon, label_lat),
+            fontsize=7,
+            color=color,
+            ha="center",
+            va="bottom",
+            bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.7),
+        )
 
     ax.set_xlabel("经度 (°E)")
     ax.set_ylabel("纬度 (°N)")
@@ -608,15 +632,21 @@ def generate_borehole_plan(
     ]
 
     for bid, x, y in boreholes:
-        ax.plot(x, y, marker="o", color="#2255AA", markersize=12,
-                markeredgewidth=1.5, markeredgecolor="#113388", zorder=5)
-        ax.annotate(f"  {bid}", xy=(x, y), xytext=(6, 4),
-                    textcoords="offset points", fontsize=9, fontweight="bold",
-                    color="#113388")
+        ax.plot(
+            x, y, marker="o", color="#2255AA", markersize=12, markeredgewidth=1.5, markeredgecolor="#113388", zorder=5
+        )
+        ax.annotate(
+            f"  {bid}",
+            xy=(x, y),
+            xytext=(6, 4),
+            textcoords="offset points",
+            fontsize=9,
+            fontweight="bold",
+            color="#113388",
+        )
 
     # Add cross-section line (A–A')
-    ax.annotate("", xy=(35, 2), xytext=(-5, 2),
-                arrowprops=dict(arrowstyle="<->", color="gray", lw=1.2))
+    ax.annotate("", xy=(35, 2), xytext=(-5, 2), arrowprops=dict(arrowstyle="<->", color="gray", lw=1.2))
     ax.text(15, 5, "A", fontsize=8, color="gray", ha="center")
     ax.text(15, -2.5, "A'", fontsize=8, color="gray", ha="center")
 
@@ -660,10 +690,8 @@ def generate_borehole_log(
 
     for name, top, bottom, color in layers:
         height = bottom - top
-        ax.barh(0.5, height, height=0.8, left=top, color=color,
-                edgecolor="black", linewidth=0.8)
-        ax.text(top + height / 2, 0.5, name, ha="center", va="center",
-                fontsize=7, color="black", fontweight="bold")
+        ax.barh(0.5, height, height=0.8, left=top, color=color, edgecolor="black", linewidth=0.8)
+        ax.text(top + height / 2, 0.5, name, ha="center", va="center", fontsize=7, color="black", fontweight="bold")
 
     site_name = params.get("name", "工程场地")
     ax.set_title(f"{site_name}\n典型钻孔柱状示意图 (ZK1)")
