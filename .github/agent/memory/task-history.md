@@ -21,6 +21,17 @@
 
 ## Task Records
 
+### [TASK-018] 修复报告三个渲染问题：粗体星号/图题双编号/未知图片引用
+- **Date**: 2026-05-10
+- **Type**: fix
+- **Summary**: 诊断 v1.1.0 生成的报告 report_anping_demo_20260510.docx，发现三个问题：①`**粗体**` 未解析，星号原样输出（`render_docx.py` 直接 `add_paragraph` 不解析 inline markdown）；②caption 已含 `图N-N` 编号时渲染器仍 auto-add 编号，导致双编号（`图8-1  图8-1 ...`）；③Hermes 在第4章引用了不存在的钻孔图文件（`assets/generated/` 以外路径）。修复：新增 `_add_paragraph_with_inline_fmt()` 用正则解析 `**bold**`/`*italic*`；caption 检测 `图\d+-\d+` 前缀时传 `add_number=False`；更新 `chapter_prompts.py` 明确列出可用图件列表并禁止引用 `assets/generated/` 以外路径。
+- **Changed files**:
+  - `scripts/render_docx.py`（新增 `_add_paragraph_with_inline_fmt`；`_INLINE_RE`/`_CAPTION_HAS_NUM_RE` 正则；图片渲染传 `add_number`）
+  - `lib/prompts/chapter_prompts.py`（图件引用说明改为明确文件列表 + 禁止引用非 generated 路径）
+  - `tests/test_scripts.py`（新增 `test_render_bold_text_is_parsed`、`test_render_caption_no_double_numbering`）
+  - `SKILL.md`（版本 1.1.0 → 1.2.0）
+- **Notes**: 161→163 条测试全绿。钻孔图等非自动生成图件需用户另附，章节 prompt 已明确说明。
+
 ### [TASK-017] 修复图片未渲染进 docx 的 Bug + SKILL.md 结构问题
 - **Date**: 2026-05-09
 - **Type**: fix

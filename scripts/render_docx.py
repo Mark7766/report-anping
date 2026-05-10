@@ -82,13 +82,18 @@ def _sort_key(path: Path) -> tuple[int, str]:
 class MarkdownToDocxRenderer:
     """
     简单的 Markdown → Word 渲染器。
-    支持: #/##/###/#### 标题、段落、表格、图片引用（![...](...)）。
+    支持: #/##/###/#### 标题、段落、表格、图片引用（![...](...)）、
+    内联 **粗体** / *斜体* 格式。
     """
 
     # 图片引用: ![caption](path) 或 ![caption](path){width=N}
     _IMG_RE = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)(?:\{[^}]*\})?")
     # 表格行: 以 | 开头
     _TABLE_LINE_RE = re.compile(r"^\s*\|")
+    # 内联格式分割: **粗体** 或 *斜体*（先匹配双星号）
+    _INLINE_RE = re.compile(r"(\*\*[^*]+\*\*|\*[^*]+\*)")
+    # 图题已含编号: 以 "图N-N" 开头
+    _CAPTION_HAS_NUM_RE = re.compile(r"^图\s*\d+[-\u2013]\d+")
 
     def __init__(
         self,
@@ -105,6 +110,29 @@ class MarkdownToDocxRenderer:
         self.figure_numbering = FigureNumbering()
         self.figure_renderer = DocxFigureRenderer(doc, self.fmt, self.figure_numbering)
         self.chapter_tracker = ChapterNumberingTracker()
+
+    def _add_paragraph_with_inline_fmt(self, text: str) -> None:
+        """Add a paragraph to doc with **bold** and *italic* inline markdown parsed into runs."""
+        para = self.doc.add_paragraph()
+        para.alignment = 3  # justify
+        para.paragraph_format.line_spacing = 1.5
+        para.paragraph_format.first_line_indent = Pt(24)
+        para.paragraph_format.space_after = Pt(6)
+        body_font = self.fmt.get("body_font", "宋体")
+        body_size = self.fmt.get("body_size", 12)
+
+        parts = self._INLINE_RE.split(text)
+        for part in parts:
+            if part.startswith("**") and part.endswith("**"):
+                run = para.add_run(part[2:-2])
+                run.bold = True
+            elif part.startswith("*") and part.endswith("*"):
+                run = para.add_run(part[1:-1])
+                run.italic = True
+            else:
+                run = para.add_run(part)
+            run.font.name = body_font
+            run.font.size = Pt(body_size)
 
     def render_chapter(self, content: str) -> None:
         """Render a complete chapter's markdown content into self.doc."""
@@ -154,23 +182,17 @@ class MarkdownToDocxRenderer:
                 # paths like "assets/generated/xxx.png" work regardless of CWD.
                 if self.base_dir and not Path(img_path).is_absolute():
                     img_path = str(self.base_dir / img_path)
-                self.figure_renderer.render(img_path, caption=caption)
+                # If caption already contains a figure number (e.g. "图2-1 ..."),
+                # skip auto-numbering to avoid double numbers like "图2-1  图2-1 ...".
+                add_num = not bool(self._CAPTION_HAS_NUM_RE.match(caption))
+                self.figure_renderer.render(img_path, caption=caption, add_number=add_num)
                 idx += 1
                 continue
 
             # --- Blank line or paragraph text ---
             stripped = line.strip()
             if stripped:
-                para = self.doc.add_paragraph(stripped)
-                para.alignment = 3  # justify
-                para.paragraph_format.line_spacing = 1.5
-                para.paragraph_format.first_line_indent = Pt(24)
-                para.paragraph_format.space_after = Pt(6)
-                body_font = self.fmt.get("body_font", "宋体")
-                body_size = self.fmt.get("body_size", 12)
-                for run in para.runs:
-                    run.font.name = body_font
-                    run.font.size = Pt(body_size)
+                self._add_paragraph_with_inline_fmt(stripped)
             idx += 1
 
 

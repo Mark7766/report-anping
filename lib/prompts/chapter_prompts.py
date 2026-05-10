@@ -133,10 +133,17 @@ def build_chapter_prompt(project_data, chapter, chapter_index, total_chapters):
 2. 关键数据尽量结构化表达：范围、均值、极值、主控因素
 3. 章节末尾增加“### 本节小结”，用 2-4 条条目总结
 4. 对于图件相关内容，使用规范图题风格（图X-Y 名称）
-5. 若可引用生成图件，请使用 Markdown 图片语法，例如：
-    - ![图 2-1 区域地震 M-T 图](assets/generated/mt_chart.png)
-    - ![图 6-1 设计反应谱对比图](assets/generated/response_spectrum.png)
-    - ![图 6-2 不同超越概率 PGA 对比图](assets/generated/pga_comparison.png)
+5. 若可引用生成图件，请使用 Markdown 图片语法，**仅限**引用 `assets/generated/`
+   目录下由脚本自动生成的图件，可用文件如下：
+    - `assets/generated/mt_chart.png` — 区域地震 M-T 图
+    - `assets/generated/response_spectrum.png` — 设计反应谱对比图
+    - `assets/generated/pga_comparison.png` — 不同超越概率 PGA 对比图
+    - `assets/generated/epicenter_distribution.png` — 区域震中分布图
+    - `assets/generated/focal_depth.png` — 震源深度分布图
+    - `assets/generated/intensity_influence.png` — 历史地震影响烈度分布图
+   **不要引用** `assets/generated/` 以外的图片路径（如钻孔柱状图、构造图等），
+   这些图件不由脚本生成，引用会导致"图片未找到"占位符出现在报告中。
+   对于无法自动生成的图件，在正文中用文字描述即可（如"钻孔平面布置见图4-1，已另附工程图"）。
 
 【排版规范——必须严格遵守】
 1. 每个自然段控制在 300～500 字以内，段与段之间用空行分隔

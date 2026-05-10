@@ -6,7 +6,7 @@ description: >-
   生成的 Markdown 章节渲染为合规 .docx 报告，最后执行合规检查并将文件路径告知用户。
   适用工程类别：核电站、大坝、高层建筑等 GB 17741-2025 规定的重大工程。
   触发词：安全性评价、安评报告、地震评价、GB 17741。
-version: "1.1.0"
+version: "1.2.0"
 author: report-anping contributors
 license: MIT
 metadata:

@@ -172,6 +172,86 @@ class TestRenderDocx:
         render(params=params, chapters_dir=FIXTURES_CHAPTERS, out_path=out)
         assert out.exists()
 
+    def test_render_bold_text_is_parsed(self, tmp_path: Path) -> None:
+        """**bold** markdown in chapter text should produce bold Word runs, not asterisks."""
+        import struct
+        import zlib
+
+        from docx import Document
+
+        from scripts.render_docx import render
+
+        # minimal 1x1 PNG
+        def _make_png(path: Path) -> None:
+            def chunk(t: bytes, d: bytes) -> bytes:
+                return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+
+            sig = b"\x89PNG\r\n\x1a\n"
+            ihdr = chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
+            idat = chunk(b"IDAT", zlib.compress(b"\x00\xff\xff\xff"))
+            iend = chunk(b"IEND", b"")
+            path.write_bytes(sig + ihdr + idat + iend)
+
+        chapters = tmp_path / "chapters"
+        chapters.mkdir()
+        md = (
+            "# 第1章 概述\n\n"
+            "**评价单位**：某机构\n\n"
+            "普通段落无粗体。\n"
+        )
+        (chapters / "01_chapter1.md").write_text(md, encoding="utf-8")
+
+        params = {"name": "Test", "level": "II", "evaluation_unit": "XXX", "report_date": "2025-01"}
+        out = tmp_path / "report.docx"
+        render(params=params, chapters_dir=chapters, out_path=out)
+
+        doc = Document(str(out))
+        all_text = " ".join(p.text for p in doc.paragraphs)
+        # No raw asterisks should appear
+        assert "**" not in all_text, f"Raw asterisks found in output: {all_text!r}"
+        # Bold run should exist
+        bold_runs = [r for p in doc.paragraphs for r in p.runs if r.bold and "评价单位" in r.text]
+        assert bold_runs, "Expected a bold run containing '评价单位'"
+
+    def test_render_caption_no_double_numbering(self, tmp_path: Path) -> None:
+        """Caption already containing '图N-N' should not be prefixed with another number."""
+        import struct
+        import zlib
+
+        from docx import Document
+
+        from scripts.render_docx import render
+
+        def _make_png(path: Path) -> None:
+            def chunk(t: bytes, d: bytes) -> bytes:
+                return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+
+            sig = b"\x89PNG\r\n\x1a\n"
+            ihdr = chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
+            idat = chunk(b"IDAT", zlib.compress(b"\x00\xff\xff\xff"))
+            iend = chunk(b"IEND", b"")
+            path.write_bytes(sig + ihdr + idat + iend)
+
+        chapters = tmp_path / "chapters"
+        chapters.mkdir()
+        assets = tmp_path / "assets" / "generated"
+        assets.mkdir(parents=True)
+        _make_png(assets / "response_spectrum.png")
+
+        md = "# 6 地震动参数\n\n![图6-1 设计反应谱](assets/generated/response_spectrum.png)\n"
+        (chapters / "01_chapter6.md").write_text(md, encoding="utf-8")
+
+        params = {"name": "Test", "level": "II", "evaluation_unit": "XXX", "report_date": "2025-01"}
+        out = tmp_path / "report.docx"
+        render(params=params, chapters_dir=chapters, out_path=out)
+
+        doc = Document(str(out))
+        caption_paras = [p.text for p in doc.paragraphs if "设计反应谱" in p.text]
+        assert caption_paras, "Caption paragraph not found"
+        # Must not contain double number like "图6-1  图6-1"
+        for t in caption_paras:
+            assert t.count("图6-1") <= 1, f"Double numbering detected: {t!r}"
+
 
 # ============================================================
 # check_compliance
