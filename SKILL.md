@@ -6,7 +6,7 @@ description: >-
   生成的 Markdown 章节渲染为合规 .docx 报告，最后执行合规检查并将文件路径告知用户。
   适用工程类别：核电站、大坝、高层建筑等 GB 17741-2025 规定的重大工程。
   触发词：安全性评价、安评报告、地震评价、GB 17741。
-version: "1.2.0"
+version: "1.3.0"
 author: report-anping contributors
 license: MIT
 metadata:
@@ -28,7 +28,7 @@ metadata:
 1. **参数收集**：通过微信多轮对话，依次向用户询问 13 个必要项目参数（项目名称、工作等级、工程类别、场地位置等），写入 `params.json`。
 2. **章节生成**：对每一章调用 `build_chapter_prompt.py` 获取定制 prompt，Hermes 用自己的 LLM 生成 Markdown，保存至 `chapters/NN_chapterX.md`。
 3. **图件生成**：调用 `generate_figures.py` 基于 `params.json` 生成反应谱图、PGA 对比图；若 `data/ceic_catalog.csv` 存在（CEIC 导出文件）则**自动**追加生成 M-T 图、震中分布图、震源深度分布图；若 `params.json` 含 `historical_influences` 字段则生成烈度影响条形图。
-4. **文档渲染**：调用 `render_docx.py` 将全部章节 Markdown 渲染为格式规范的 Word 文档（`exports/report.docx`）。
+4. **文档渲染**：调用 `render_docx.py` 将全部章节 Markdown 渲染为格式规范的 Word 文档（`exports/report.docx`）。支持内联粗体/斜体、表格内图片检测；缺失图片自动插入红框占位符。
 5. **合规检查**：调用 `check_compliance.py` 对照 GB 17741-2025 逐章检查，输出评分与不符合项。
 
 脚本本身**不调用任何 LLM**；所有 LLM 调用均由 Hermes 自主完成。脚本只负责：查询标准知识库、拼接 prompt 模板、纯确定性渲染。
@@ -257,7 +257,94 @@ python scripts/check_compliance.py \
 ### 6. python 版本
 - 本技能需要 Python 3.11+；`python` 命令在部分系统指向 Python 2，建议显式使用 `python3`
 
-## Verification Checklist
+### 7. 依赖安装要点（Debian 13 / Raspberry Pi arm64）
+
+Debian 13 系统 Python 是 externally-managed，`pip install` 会报错。正确安装方式：
+
+```bash
+# matplotlib（系统 Python 必须用 apt）
+sudo apt install python3-matplotlib -y
+
+# python-docx（系统 Python 用 apt）
+sudo apt install python3-docx -y
+
+# Hermes venv 中也需要 python-docx + markdown（render_docx.py 用）
+/home/mark/hermes-agent/.venv/bin/pip install python-docx markdown -q
+```
+
+**脚本调用规则：**
+- `show_params.py`、`build_chapter_prompt.py`、`init_project.py`、`generate_figures.py`、`check_compliance.py`：用系统 `python3`
+- `render_docx.py`：**必须用 Hermes venv 的 Python**（`/home/mark/hermes-agent/.venv/bin/python`）
+
+### 8. matplotlib 中文字体（CJK 支持）
+
+Linux 默认字体 DejaVu Sans 不含中文，`generate_figures.py` 生成的图表中文会显示为方框。修复：
+
+```bash
+sudo apt install fonts-wqy-microhei -y
+rm -rf ~/.cache/matplotlib/  # 清除字体缓存
+```
+
+### 9. `which hermes` 不可用
+
+部分环境（crontab、SSH）`which hermes` 返回空。直接使用已知路径：
+- Hermes 二进制：`/home/mark/hermes-agent/.venv/bin/hermes`
+- Hermes Python：`/home/mark/hermes-agent/.venv/bin/python`
+
+### 10. 章节生成：不要用 delegate_task 批量生成
+
+生成 11 个章节时，**禁止**用 `delegate_task` 打包多个章节给子 agent —— 每个章节 prompt 为 2–5K chars，6 个章节 = 15–30K 上下文，子 agent 会在 600s 后超时。
+
+**正确做法**：在主会话中逐章生成，用 `build_chapter_prompt.py` 获取 prompt → 直接生成 Markdown → `write_file` 保存。每章约 1–2 分钟，全流程可控。
+
+```bash
+# 先批量获取所有章节 prompt，再逐章生成
+for ch in preface chapter1 chapter2 chapter3 chapter4 chapter5 chapter7 chapter8 chapter9 chapter10 appendix; do
+  python3 scripts/build_chapter_prompt.py --chapter $ch --params params.json > /tmp/prompt_$ch.txt
+done
+```
+
+### 11. 合规检查误报处理
+
+`check_compliance.py` 通过关键词匹配检查，可能对实质性内容已覆盖但未出现特定术语的章节报 error（如「项目名称」「衰减关系」等）。常见误报类型：
+- 章节内容已覆盖要求但措辞不同 → 合规检查给出低分但实际质量合格
+- 数值被误解析（如 `Vs20=198.5` 被当作 `20m/s` 与 500m/s 对比）
+- 对于 demo 报告，这些误报属正常现象；正式项目可在章节 prompt 中显式列出 GB 17741 要求的关键词
+
+### 12. 图片渲染：表格内图片被静默跳过（v1.2.1 修复）
+
+章节 Markdown 中使用 `| ![...](...) |` 表格格式包裹的图片引用（常见于居中排版），在 v1.2.0 及之前会被静默跳过——渲染器先匹配表格 `|...|` 行，图片正则 `_IMG_RE.match()` 仅匹配行首，导致图片从未被检测。
+
+**v1.2.1 修复**：
+- `render_docx.py`：图片检测改用 `search()`（查找行内任意位置）+ 图片检查移到表格检查之前
+- 修复后 `| ![...](...) |` 格式的图片能正常渲染
+
+**验证方法**：渲染日志中应出现 `[PIL.PngImagePlugin] [DEBUG] STREAM` 表示图片被加载，或 `[figure_renderer] [WARNING] 图片文件不存在` 表示检测到但文件缺失。
+
+### 13. 缺失图片的可视化占位（v1.2.1 新增）
+
+当引用的图片文件不存在时，`figure_renderer.py` 会插入红框占位符而非灰色小字，包含：
+- ⚠ 错误类型（红色加粗）
+- 图名
+- 灰色提示「请联系报告编制人员补充此图件」
+
+**目的**：让报告审阅者一眼看到缺失图件，不致因无声跳过长年遗漏。
+
+### 14. 图片可自动生成类型对照
+
+| 图片 | 生成条件 | 自动生成？ |
+|------|---------|----------|
+| `response_spectrum.png` | params.json 含 exceedance_probs | ✅ 总是 |
+| `pga_comparison.png` | params.json 含 exceedance_probs | ✅ 总是 |
+| `intensity_bar_chart.png` | params.json 含 historical_influences | ✅ 有条件 |
+| `epicenter_map.png` | 总是（有 CEIC 目录用真实数据，无则用简化场地图） | ✅ 总是 |
+- `epicenter_map.png` — 总是（有 CEIC 目录用真实数据，无则用场地图 fallback）
+| `focal_depth_distribution.png` | data/ceic_catalog.csv 存在 | ✅ 有条件 |
+| `borehole_plan.png` | 总是（基于 params 生成示意布局） | ✅ 总是 |
+| `borehole_log.png` | 总是（基于典型地层剖面生成） | ✅ 总是 |
+| 断层分布图 / 构造图 | — | ❌ 需手动 |
+
+**建议**：LLM 生成章节时，对 ❌ 类图片使用 `[此处需插入：图X-X 示意图]` 占位文本而非 `![...](assets/...)` 引用，避免渲染出缺失占位。
 
 Hermes 完成 Step 3–4 后，依次验证以下条目后再告知用户：
 

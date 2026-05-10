@@ -159,22 +159,8 @@ class MarkdownToDocxRenderer:
                 idx += 1
                 continue
 
-            # --- Table (collect consecutive | lines) ---
-            if self._TABLE_LINE_RE.match(line):
-                table_lines: list[str] = []
-                while idx < len(lines) and self._TABLE_LINE_RE.match(lines[idx]):
-                    table_lines.append(lines[idx])
-                    idx += 1
-                table_data = MarkdownTableParser.parse(table_lines)
-                if table_data:
-                    self.table_renderer.render(
-                        table_data,
-                        table_number=self.table_numbering.next_number(),
-                    )
-                continue
-
-            # --- Image ---
-            img_match = self._IMG_RE.match(line.strip())
+            # --- Image (check BEFORE table so | ![...](...) | lines are caught) ---
+            img_match = self._IMG_RE.search(line)
             if img_match:
                 caption = img_match.group(1).strip()
                 img_path = img_match.group(2).strip()
@@ -187,6 +173,20 @@ class MarkdownToDocxRenderer:
                 add_num = not bool(self._CAPTION_HAS_NUM_RE.match(caption))
                 self.figure_renderer.render(img_path, caption=caption, add_number=add_num)
                 idx += 1
+                continue
+
+            # --- Table (collect consecutive | lines) ---
+            if self._TABLE_LINE_RE.match(line):
+                table_lines: list[str] = []
+                while idx < len(lines) and self._TABLE_LINE_RE.match(lines[idx]):
+                    table_lines.append(lines[idx])
+                    idx += 1
+                table_data = MarkdownTableParser.parse(table_lines)
+                if table_data:
+                    self.table_renderer.render(
+                        table_data,
+                        table_number=self.table_numbering.next_number(),
+                    )
                 continue
 
             # --- Blank line or paragraph text ---

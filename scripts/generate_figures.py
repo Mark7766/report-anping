@@ -27,6 +27,9 @@ from lib.chart_builder import (
     generate_pga_bar_chart,
     generate_response_spectrum_chart,
     load_catalog_records,
+    generate_epicenter_map_fallback,
+    generate_borehole_plan,
+    generate_borehole_log,
 )
 
 # Default CEIC catalog path relative to the skill root
@@ -90,6 +93,28 @@ def generate_figures_manifest(
         focal_depth_chart = out_dir / "focal_depth_distribution.png"
         generate_focal_depth_distribution(records, focal_depth_chart)
         manifest["focal_depth_distribution"] = str(focal_depth_chart)
+    else:
+        # No CEIC catalog — generate a simplified epicentre map with
+        # site marker + reference circles as a fallback.
+        try:
+            center_lon = float(params.get("coordinate_lon", 0))
+            center_lat = float(params.get("coordinate_lat", 0))
+        except (TypeError, ValueError):
+            center_lon, center_lat = 0.0, 0.0
+
+        site_name = str(params.get("name", "Site"))
+        epicenter_map = out_dir / "epicenter_map.png"
+        generate_epicenter_map_fallback(center_lon, center_lat, epicenter_map, site_name=site_name)
+        manifest["epicenter_map"] = str(epicenter_map)
+
+    # Always generate borehole schematic figures for engineering geology chapter
+    borehole_plan = out_dir / "borehole_plan.png"
+    generate_borehole_plan(params, borehole_plan)
+    manifest["borehole_plan"] = str(borehole_plan)
+
+    borehole_log = out_dir / "borehole_log.png"
+    generate_borehole_log(params, borehole_log)
+    manifest["borehole_log"] = str(borehole_log)
 
     historical_influences = params.get("historical_influences")
     if historical_influences and isinstance(historical_influences, list):

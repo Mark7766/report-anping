@@ -403,14 +403,53 @@ class DocxFigureRenderer:
         p.paragraph_format.space_after = Pt(12)
 
     def _add_placeholder(self, caption, error_msg):
-        """添加图片占位符"""
-        p = self.doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH_CENTER
-        run = p.add_run(f"[{error_msg}: {caption}]")
-        run.font.name = "宋体"
-        run.font.size = Pt(10)
-        run.italic = True
-        run._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+        """添加醒目的图片占位符框（便于报告审阅者识别缺失图件）"""
+        from docx.shared import RGBColor
+
+        # 用带边框的单格表格作为占位框
+        table = self.doc.add_table(rows=1, cols=1)
+        table.alignment = 1  # center
+        # 设置表格边框
+        tbl = table._tbl
+        tblPr = tbl.tblPr if tbl.tblPr is not None else OxmlElement("w:tblPr")
+        tblBorders = OxmlElement("w:tblBorders")
+        for border_name, color in [("top", "CC0000"), ("left", "CC0000"),
+                                     ("bottom", "CC0000"), ("right", "CC0000")]:
+            border = OxmlElement(f"w:{border_name}")
+            border.set(qn("w:val"), "single")
+            border.set(qn("w:sz"), "8")
+            border.set(qn("w:space"), "4")
+            border.set(qn("w:color"), color)
+            tblBorders.append(border)
+        tblPr.append(tblBorders)
+        if tbl.tblPr is None:
+            tbl.insert(0, tblPr)
+
+        cell = table.rows[0].cells[0]
+        # 错误信息行（红色加粗）
+        p_err = cell.paragraphs[0]
+        p_err.alignment = WD_ALIGN_PARAGRAPH_CENTER
+        run_err = p_err.add_run(f"⚠ {error_msg}")
+        run_err.font.name = "宋体"
+        run_err.font.size = Pt(12)
+        run_err.font.bold = True
+        run_err.font.color.rgb = RGBColor(0xCC, 0x00, 0x00)
+        run_err._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+        # 图名行
+        p_caption = cell.add_paragraph()
+        p_caption.alignment = WD_ALIGN_PARAGRAPH_CENTER
+        run_cap = p_caption.add_run(caption)
+        run_cap.font.name = "宋体"
+        run_cap.font.size = Pt(10)
+        run_cap._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+        # 提示行
+        p_hint = cell.add_paragraph()
+        p_hint.alignment = WD_ALIGN_PARAGRAPH_CENTER
+        run_hint = p_hint.add_run("（请联系报告编制人员补充此图件）")
+        run_hint.font.name = "宋体"
+        run_hint.font.size = Pt(9)
+        run_hint.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+        run_hint._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
 
     def _remove_table_borders(self, table):
         """移除表格边框"""

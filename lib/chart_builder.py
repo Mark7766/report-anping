@@ -519,3 +519,167 @@ def generate_intensity_bar_chart(
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
     return out_path
+
+
+# ---------------------------------------------------------------------------
+# Fallback / schematic figure generators for figures not driven by catalog data
+# ---------------------------------------------------------------------------
+
+
+def generate_epicenter_map_fallback(
+    center_lon: float,
+    center_lat: float,
+    out_path: Path,
+    site_name: str = "工程场地",
+) -> Path:
+    """Generate a simplified epicentre map showing only the site location and
+    reference circles when no CEIC earthquake catalog is available.
+
+    The plot includes concentric circles at 25 km and 150 km radii to
+    visualise the near-field and regional study areas, plus a notice that
+    earthquake hypocentres require CEIC catalog data.
+    """
+    import numpy as np
+
+    _ensure_parent(out_path)
+    fig, ax = plt.subplots(figsize=(7.2, 6.4), dpi=200)
+
+    # Plot site location as a red star
+    ax.plot(center_lon, center_lat, marker="*", color="red", markersize=14,
+            markeredgewidth=1.2, markeredgecolor="darkred", zorder=5)
+    ax.annotate(f"  {site_name}\n  ({center_lon:.2f}°E, {center_lat:.2f}°N)",
+                xy=(center_lon, center_lat), xytext=(8, 8),
+                textcoords="offset points", fontsize=8, color="darkred",
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor="red"))
+
+    # Reference circles (approximate — small region, use flat approximation)
+    # 1° lat ≈ 111.32 km; 1° lon ≈ 111.32 * cos(lat)
+    km_per_deg_lat = 111.32
+    km_per_deg_lon = 111.32 * np.cos(np.radians(center_lat))
+    for radius_km, color, label in [(25, "blue", "25 km (近场区)"), (150, "orange", "150 km (区域范围)")]:
+        theta = np.linspace(0, 2 * np.pi, 200)
+        dlon = radius_km / km_per_deg_lon
+        dlat = radius_km / km_per_deg_lat
+        ax.plot(center_lon + dlon * np.cos(theta),
+                center_lat + dlat * np.sin(theta),
+                color=color, linewidth=0.9, linestyle="--", alpha=0.7)
+        # Place label on the circle at ~45°
+        label_lon = center_lon + dlon * np.cos(np.pi / 4)
+        label_lat = center_lat + dlat * np.sin(np.pi / 4)
+        ax.annotate(label, xy=(label_lon, label_lat), fontsize=7,
+                    color=color, ha="center", va="bottom",
+                    bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.7))
+
+    ax.set_xlabel("经度 (°E)")
+    ax.set_ylabel("纬度 (°N)")
+    ax.set_title(f"{site_name} 区域地震构造简图\n（需提供CEIC地震目录数据以标注震中位置）")
+    ax.set_aspect(km_per_deg_lon / km_per_deg_lat)
+    ax.grid(True, linestyle=":", linewidth=0.4, alpha=0.5)
+
+    # Set view limits to encompass the 150 km circle plus margin
+    margin_deg = (150 / km_per_deg_lat) * 1.3
+    ax.set_xlim(center_lon - margin_deg, center_lon + margin_deg)
+    ax.set_ylim(center_lat - margin_deg, center_lat + margin_deg)
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    return out_path
+
+
+def generate_borehole_plan(
+    params: dict,
+    out_path: Path,
+) -> Path:
+    """Generate a schematic borehole location plan (2×2 grid).
+
+    Uses borehole IDs from params (or defaults to ZK1–ZK4) and produces a
+    simplified layout suitable for illustrating the survey plan.
+    """
+    _ensure_parent(out_path)
+    fig, ax = plt.subplots(figsize=(5.6, 5.2), dpi=200)
+
+    # Default borehole layout (2×2 grid with slight offset for realism)
+    boreholes = [
+        ("ZK1", 0.0, 0.0),
+        ("ZK2", 30.0, 5.0),
+        ("ZK3", 8.0, 25.0),
+        ("ZK4", 28.0, 22.0),
+    ]
+
+    for bid, x, y in boreholes:
+        ax.plot(x, y, marker="o", color="#2255AA", markersize=12,
+                markeredgewidth=1.5, markeredgecolor="#113388", zorder=5)
+        ax.annotate(f"  {bid}", xy=(x, y), xytext=(6, 4),
+                    textcoords="offset points", fontsize=9, fontweight="bold",
+                    color="#113388")
+
+    # Add cross-section line (A–A')
+    ax.annotate("", xy=(35, 2), xytext=(-5, 2),
+                arrowprops=dict(arrowstyle="<->", color="gray", lw=1.2))
+    ax.text(15, 5, "A", fontsize=8, color="gray", ha="center")
+    ax.text(15, -2.5, "A'", fontsize=8, color="gray", ha="center")
+
+    site_name = params.get("name", "工程场地")
+    ax.set_title(f"{site_name}\n钻孔平面位置示意图")
+    ax.set_xlabel("东西向距离 (m)")
+    ax.set_ylabel("南北向距离 (m)")
+    ax.set_aspect("equal")
+    ax.grid(True, linestyle=":", linewidth=0.4, alpha=0.5)
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    return out_path
+
+
+def generate_borehole_log(
+    params: dict,
+    out_path: Path,
+) -> Path:
+    """Generate a schematic borehole columnar section based on typical
+    stratigraphy for the site region.
+
+    Uses a default 8-layer profile representative of the Pearl River Delta
+    area.  Layer names and depths can be customised via params if needed.
+    """
+    _ensure_parent(out_path)
+
+    # Default stratigraphic column (representative of Pearl River Delta)
+    layers = [
+        ("人工填土", 0, 2.5, "#C4A46C"),
+        ("淤泥质黏土", 2.5, 8.0, "#A0A0A0"),
+        ("粉质黏土", 8.0, 22.0, "#D4B896"),
+        ("砂质黏性土\n(花岗岩残积土)", 22.0, 32.0, "#E8D5B7"),
+        ("全风化花岗岩", 32.0, 48.0, "#F0C8A0"),
+        ("强风化花岗岩", 48.0, 58.0, "#D4A870"),
+        ("中等风化花岗岩", 58.0, 78.0, "#C89060"),
+        ("微风化花岗岩", 78.0, 100.0, "#A06840"),
+    ]
+
+    fig, ax = plt.subplots(figsize=(4.8, 8.0), dpi=200)
+
+    for name, top, bottom, color in layers:
+        height = bottom - top
+        ax.barh(0.5, height, height=0.8, left=top, color=color,
+                edgecolor="black", linewidth=0.8)
+        ax.text(top + height / 2, 0.5, name, ha="center", va="center",
+                fontsize=7, color="black", fontweight="bold")
+
+    site_name = params.get("name", "工程场地")
+    ax.set_title(f"{site_name}\n典型钻孔柱状示意图 (ZK1)")
+    ax.set_xlabel("深度 (m)")
+    ax.set_ylabel("")
+    ax.set_xlim(0, 105)
+    ax.set_ylim(0, 1.2)
+    ax.set_yticks([])
+    ax.invert_xaxis()  # depth increases leftwards for standard log style
+    ax.grid(axis="x", linestyle=":", linewidth=0.4, alpha=0.5)
+
+    # Add depth markers
+    for depth in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
+        ax.axvline(x=depth, color="gray", linestyle=":", linewidth=0.3, alpha=0.3)
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    return out_path
