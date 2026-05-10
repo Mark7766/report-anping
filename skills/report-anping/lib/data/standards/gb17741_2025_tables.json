@@ -1,0 +1,92 @@
+{
+  "standard_code": "GB 17741-2025",
+  "section": "技术表格",
+  "tables": {
+    "table1": {
+      "title": "目标反应谱控制点频率间隔",
+      "unit": "赫兹(Hz)",
+      "reference": "第12章 表1",
+      "data": [
+        {"frequency_range": "< 0.2", "interval": "0.02"},
+        {"frequency_range": "0.2~2.9", "interval": "0.10"},
+        {"frequency_range": "3.0~3.5", "interval": "0.15"},
+        {"frequency_range": "3.6~4.9", "interval": "0.20"},
+        {"frequency_range": "5.0~7.9", "interval": "0.25"},
+        {"frequency_range": "8.0~14.9", "interval": "0.50"},
+        {"frequency_range": "15.0~17.9", "interval": "1.00"},
+        {"frequency_range": "18.0~21.9", "interval": "2.00"},
+        {"frequency_range": ">=22.0", "interval": "3.00"}
+      ]
+    },
+    "table2": {
+      "title": "调整系数β₀的取值",
+      "reference": "第13章 表2",
+      "description": "液化判别调整系数，依场地地震动反应谱特征周期Tg确定",
+      "data": [
+        {"Tg_range": "<0.40s", "beta_0": 0.85},
+        {"Tg_range": "0.40~0.45s", "beta_0": 1.00},
+        {"Tg_range": ">0.45s", "beta_0": 1.10}
+      ]
+    },
+    "table3": {
+      "title": "坡体坡度危险度因子Ss取值",
+      "reference": "第13章 表3",
+      "data": [
+        {"landslide_slope": "<21°", "collapse_slope": "<41°", "Ss": 1},
+        {"landslide_slope": "21°~40°", "collapse_slope": "41°~60°", "Ss": 2},
+        {"landslide_slope": ">40°", "collapse_slope": ">60°", "Ss": 3}
+      ]
+    },
+    "table4": {
+      "title": "地震动危险度因子Sp取值",
+      "reference": "第13章 表4",
+      "data": [
+        {"pga_range": "<0.04gn", "Sp": 1},
+        {"pga_range": "0.04~0.19gn", "Sp": 2},
+        {"pga_range": ">0.19gn", "Sp": 3}
+      ]
+    },
+    "table5": {
+      "title": "坡体性状危险度因子Sr取值",
+      "reference": "第13章 表5",
+      "data": [
+        {
+          "condition": "岩体完整或较完整,结构基本未变,岩石未风化或微风化;或斜坡内主要结构面倾向与坡向相反",
+          "Sr": 1
+        },
+        {
+          "condition": "岩体较破碎,结构部分破坏,岩石中等风化;或斜坡内主要结构面倾向与坡向斜交",
+          "Sr": 2
+        },
+        {
+          "condition": "岩体破碎或极破碎,结构大部分破坏或基本破坏,岩石强风化或全风化;或斜坡内主要结构面倾向与坡向大致相同,并存在软弱地层;或土质滑坡体;或有崩塌滑坡发育现象",
+          "Sr": 3
+        }
+      ],
+      "notes": [
+        "坡体质地划分为土质坡体和岩质坡体",
+        "GB 50021给出了岩体完整程度和岩石风化程度判定准则"
+      ]
+    },
+    "table6": {
+      "title": "坡体地震崩塌滑坡危险程度",
+      "reference": "第13章 表6",
+      "data": [
+        {"H_range": "1~4", "danger_level": "低"},
+        {"H_range": "6~12", "danger_level": "中"},
+        {"H_range": "18~27", "danger_level": "高"}
+      ]
+    },
+    "tableA1": {
+      "title": "标准地震动反应谱控制点谱值",
+      "reference": "附录A 表A.1",
+      "data": [
+        {"frequency_hz": 33.0, "spectral_value_gn": 1.0},
+        {"frequency_hz": 9.0, "spectral_value_gn": 2.61},
+        {"frequency_hz": 2.5, "spectral_value_gn": 3.13},
+        {"frequency_hz": 0.25, "spectral_value_gn": 0.472}
+      ]
+    }
+  }
+}
+
