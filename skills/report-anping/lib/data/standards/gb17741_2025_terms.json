@@ -1,0 +1,106 @@
+{
+  "standard_code": "GB 17741-2025",
+  "section": "第3章 术语和定义",
+  "terms": {
+    "3.1": {
+      "cn": "超越概率",
+      "en": "exceedance probability",
+      "definition": "工程场地遭遇大于或等于给定阈值的地震烈度值或地震动参数值的可能性大小。"
+    },
+    "3.2": {
+      "cn": "断层源",
+      "en": "fault source",
+      "definition": "地震危险性分析中，断层面上表征断层未来发生地震的震源及其破裂面可能分布的区域。"
+    },
+    "3.3": {
+      "cn": "地震带",
+      "en": "seismic belt",
+      "definition": "地震活动性与地震构造条件密切相关的地带。"
+    },
+    "3.4": {
+      "cn": "地震动参数",
+      "en": "ground motion parameter",
+      "definition": "表征地震引起的地面运动的物理参数。注：物理参数包括加速度、速度、位移峰值与反应谱，以及持续时间等。"
+    },
+    "3.5": {
+      "cn": "地震动预测方程",
+      "en": "ground motion prediction equation",
+      "definition": "地震动参数与表征地震震源、地震波传播路径、场地条件等因素的物理量之间的函数关系。"
+    },
+    "3.6": {
+      "cn": "地震构造",
+      "en": "seismotectonics",
+      "definition": "与地震孕育和发生有关的地质构造。",
+      "source": "GB/T18207.1-2008,3.4,有修改"
+    },
+    "3.7": {
+      "cn": "地震构造区",
+      "en": "seismotectonic province",
+      "definition": "具有同样地质构造和地震活动性的区域。",
+      "source": "GB/T18207.2-2005,3.3.4,有修改"
+    },
+    "3.8": {
+      "cn": "地震区",
+      "en": "seismic region",
+      "definition": "地震活动性和地震构造环境均相类似的区域。"
+    },
+    "3.9": {
+      "cn": "地震统计区",
+      "en": "seismicity statistical zone",
+      "definition": "概率地震危险性分析中，用于建立地震活动性统计模型并确定模型参数的区域。注：地震活动性统计模型指概率地震危险性分析中的震级概率分布、复发时间间隔概率分布、地震空间发生概率分布等模型。"
+    },
+    "3.10": {
+      "cn": "地震危险性分析",
+      "en": "seismic hazard analysis",
+      "definition": "用确定性或概率分析计算方法，给出某一场地未来不同风险情况的地震动参数或地震烈度值。注：不同风险，在概率方法中指不同超越概率水平，在确定性方法中指不同预测震源分别在场地产生的最大影响。",
+      "source": "GB/T18207.1-2008,5.17,有修改"
+    },
+    "3.11": {
+      "cn": "发震构造",
+      "en": "seismogenic structure",
+      "definition": "曾发生或可能发生破坏性地震的地质构造。"
+    },
+    "3.12": {
+      "cn": "古地震",
+      "en": "paleo-earthquake",
+      "definition": "没有文字记载、采用地质学方法发现的地震事件。"
+    },
+    "3.13": {
+      "cn": "活动构造",
+      "en": "active structure",
+      "definition": "晚更新世(或距今120000a)以来有过活动的地质构造。注：包括活动断层、活动褶皱、活动盆地、活动隆起等。",
+      "source": "GB/T18207.2-2005,3.3.1,有修改"
+    },
+    "3.14": {
+      "cn": "弥散地震",
+      "en": "diffuse earthquake",
+      "definition": "与已确认的发震构造无关的地震活动。"
+    },
+    "3.15": {
+      "cn": "能动断层",
+      "en": "capable fault",
+      "definition": "可能引起地表或近地表明显错动的断层。"
+    },
+    "3.16": {
+      "cn": "潜在震源区",
+      "en": "potential seismic source zone",
+      "definition": "概率地震危险性分析中，表征未来发生地震的震源可能分布的地区。"
+    },
+    "3.17": {
+      "cn": "最大潜在地震",
+      "en": "maximum potential earthquake",
+      "definition": "预测的未来可能发生的最大地震。"
+    },
+    "3.18": {
+      "cn": "震级空间分布函数",
+      "en": "spatial distribution function of magnitude",
+      "definition": "概率地震危险性分析中，表征地震统计区内特定震级档地震发生可能性随潜在震源区变化的函数。"
+    },
+    "3.19": {
+      "cn": "震级上限",
+      "en": "upper limit magnitude",
+      "definition": "概率地震危险性分析中，表征潜在震源地震发生能力极限的震级值。"
+    }
+  }
+}
+
